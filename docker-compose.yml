@@ -1,0 +1,50 @@
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: travel-db
+    restart: always
+    environment:
+      POSTGRES_DB: travel_platform
+      POSTGRES_USER: travel_admin
+      POSTGRES_PASSWORD: Travel@2026!Secure
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U travel_admin -d travel_platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: travel-backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://travel_admin:Travel%402026%21Secure@db:5432/travel_platform
+      SECRET_KEY: travel-jwt-secret-key-2026-internal
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    # 后端仅内部通信，不暴露外网端口；前端通过 nginx 反向代理访问
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: travel-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "5002:80"
+
+volumes:
+  pgdata:
+  uploads:
