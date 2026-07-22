@@ -14,7 +14,7 @@ export default function LoginPage() {
     try {
       await login(values.username, values.password)
       message.success('登录成功')
-      navigate('/today')
+      navigate('/chalv/today')
     } catch (err: any) {
       message.error(err.response?.data?.detail || '登录失败')
     } finally {
