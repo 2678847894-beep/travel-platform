@@ -64,15 +64,6 @@ export default function ChecklistPage() {
           </Space>
         </div>
 
-        {/* 模板切换 */}
-        <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Segmented
-            options={TEMPLATES.slice(0, 6)}
-            value={template}
-            onChange={(v) => setTemplate(v as string)}
-          />
-        </div>
-
         {/* 进度 */}
         <div style={{ marginTop: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
