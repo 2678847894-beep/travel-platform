@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Input, Avatar, Badge, Progress, Tooltip } from 'antd'
+import { Layout, Menu, Input, Avatar, Tooltip } from 'antd'
 import {
   MenuFoldOutlined, MenuUnfoldOutlined, SearchOutlined,
   CheckSquareOutlined, InboxOutlined, FileTextOutlined,
@@ -14,13 +14,13 @@ import AiAssistant from './AiAssistant'
 const { Sider, Content, Header } = Layout
 
 const menuItems = [
-  { key: '/today', icon: <CheckSquareOutlined />, label: '今天', badge: 12 },
-  { key: '/inbox', icon: <InboxOutlined />, label: '收集箱', badge: 5 },
+  { key: '/today', icon: <CheckSquareOutlined />, label: '今天' },
+  { key: '/inbox', icon: <InboxOutlined />, label: '收集箱' },
   { type: 'divider' as const, label: '差旅专属板块' },
-  { key: '/checklist', icon: <CheckCircleOutlined />, label: '物品清单', extra: '香港差旅 9/19' },
-  { key: '/sop', icon: <FileTextOutlined />, label: 'SOP知识库', extra: '12文件夹 86篇' },
-  { key: '/tasks', icon: <CalendarOutlined />, label: '每日任务', extra: '8月5日 东京 6项' },
-  { key: '/documents', icon: <FolderOutlined />, label: '文档库', extra: '23个文件' },
+  { key: '/checklist', icon: <CheckCircleOutlined />, label: '物品清单' },
+  { key: '/sop', icon: <FileTextOutlined />, label: 'SOP知识库' },
+  { key: '/tasks', icon: <CalendarOutlined />, label: '每日任务' },
+  { key: '/documents', icon: <FolderOutlined />, label: '文档库' },
   { type: 'divider' as const, label: '快捷清单模板' },
   { key: '/checklist?template=香港差旅', icon: <GlobalOutlined />, label: '香港差旅' },
   { key: '/checklist?template=欧洲差旅', icon: <GlobalOutlined />, label: '欧洲差旅' },
