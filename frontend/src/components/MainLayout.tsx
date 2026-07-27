@@ -39,7 +39,7 @@ export default function MainLayout() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const currentKey = '/' + location.pathname.split('/')[1]
+  const currentKey = location.pathname.replace('/chalv', '') + location.search
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -84,7 +84,7 @@ export default function MainLayout() {
               ),
             }
           })}
-          onClick={({ key }) => navigate(key)}
+          onClick={({ key }) => navigate('/chalv' + key)}
         />
 
         {/* 底部设置 */}
