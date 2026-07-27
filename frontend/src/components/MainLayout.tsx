@@ -5,9 +5,8 @@ import {
   MenuFoldOutlined, MenuUnfoldOutlined, SearchOutlined,
   CheckSquareOutlined, InboxOutlined, FileTextOutlined,
   CalendarOutlined, FolderOutlined, SettingOutlined,
-  CheckCircleOutlined, ShoppingCartOutlined, BoxPlotOutlined,
-  ToolOutlined, HomeOutlined, CoffeeOutlined, PlusOutlined,
-  RobotOutlined
+  CheckCircleOutlined, GlobalOutlined, HomeOutlined,
+  PlusOutlined, RobotOutlined
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/authStore'
 import AiAssistant from './AiAssistant'
@@ -23,12 +22,10 @@ const menuItems = [
   { key: '/tasks', icon: <CalendarOutlined />, label: '每日任务', extra: '8月5日 东京 6项' },
   { key: '/documents', icon: <FolderOutlined />, label: '文档库', extra: '23个文件' },
   { type: 'divider' as const, label: '快捷清单模板' },
-  { key: '/checklist?template=香港固定留存物品', icon: <CheckCircleOutlined />, label: '香港固定留存', extra: '144项' },
-  { key: '/checklist?template=香港采购清单', icon: <ShoppingCartOutlined />, label: '香港采购', extra: '51项' },
-  { key: '/checklist?template=香港物品盘点', icon: <BoxPlotOutlined />, label: '香港物品盘点', extra: '65项' },
-  { key: '/checklist?template=香港直播设备检查', icon: <ToolOutlined />, label: '直播设备检查', extra: '37项' },
-  { key: '/checklist?template=四季酒店A岗事务', icon: <HomeOutlined />, label: '四季酒店A岗', extra: '80项' },
-  { key: '/checklist?template=酒店厨房B岗事务', icon: <CoffeeOutlined />, label: '厨房B岗', extra: '20项' },
+  { key: '/checklist?template=香港差旅', icon: <GlobalOutlined />, label: '香港差旅' },
+  { key: '/checklist?template=欧洲差旅', icon: <GlobalOutlined />, label: '欧洲差旅' },
+  { key: '/checklist?template=日本差旅', icon: <GlobalOutlined />, label: '日本差旅' },
+  { key: '/checklist?template=国内差旅', icon: <HomeOutlined />, label: '国内差旅' },
   { key: '/checklist?template=new', icon: <PlusOutlined />, label: '添加新清单' },
 ]
 

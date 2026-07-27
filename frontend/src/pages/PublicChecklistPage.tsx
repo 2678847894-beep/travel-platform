@@ -3,13 +3,10 @@ import { Card, Progress, Segmented, Collapse, Tag } from 'antd'
 import { FileTextOutlined } from '@ant-design/icons'
 import { getChecklistItems } from '../services/api'
 
-const TEMPLATES = [
-  '香港固定留存物品', '香港采购清单', '香港物品盘点', '香港直播设备检查',
-  '四季酒店A岗事务', '酒店厨房B岗事务', '日本差旅准备', '欧洲差旅准备', '国内差旅准备',
-]
+const TEMPLATES = ['香港差旅', '欧洲差旅', '日本差旅', '国内差旅']
 
 export default function PublicChecklistPage() {
-  const [template, setTemplate] = useState('香港固定留存物品')
+  const [template, setTemplate] = useState('香港差旅')
   const [items, setItems] = useState<any[]>([])
   const [filterType, setFilterType] = useState('全部')
 
