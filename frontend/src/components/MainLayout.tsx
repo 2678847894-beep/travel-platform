@@ -73,12 +73,7 @@ export default function MainLayout() {
             return {
               key: item.key,
               icon: item.icon,
-              label: collapsed ? null : (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>{item.label}</span>
-                  <span style={{ fontSize: 11, color: '#94a3b8' }}>{item.extra || (item.badge ? `${item.badge}项` : '')}</span>
-                </div>
-              ),
+              label: collapsed ? null : <span>{item.label}</span>,
             }
           })}
           onClick={({ key }) => navigate('/chalv' + key)}
