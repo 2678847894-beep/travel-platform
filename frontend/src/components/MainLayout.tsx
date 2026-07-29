@@ -5,8 +5,7 @@ import {
   MenuFoldOutlined, MenuUnfoldOutlined, SearchOutlined,
   CheckSquareOutlined, InboxOutlined, FileTextOutlined,
   FolderOutlined, SettingOutlined,
-  CheckCircleOutlined, GlobalOutlined, HomeOutlined,
-  PlusOutlined, RobotOutlined
+  GlobalOutlined, HomeOutlined, PlusOutlined, RobotOutlined
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/authStore'
 import AiAssistant from './AiAssistant'
@@ -16,16 +15,15 @@ const { Sider, Content, Header } = Layout
 const menuItems = [
   { key: '/tasks', icon: <CheckSquareOutlined />, label: '每日任务' },
   { key: '/inbox', icon: <InboxOutlined />, label: '收集箱' },
-  { type: 'divider' as const, label: '差旅专属板块' },
-  { key: '/checklist', icon: <CheckCircleOutlined />, label: '物品清单' },
-  { key: '/sop', icon: <FileTextOutlined />, label: 'SOP知识库' },
-  { key: '/documents', icon: <FolderOutlined />, label: '文档库' },
-  { type: 'divider' as const, label: '快捷清单模板' },
+  { type: 'divider' as const, label: '目的地' },
   { key: '/checklist?template=香港差旅', icon: <GlobalOutlined />, label: '香港差旅' },
   { key: '/checklist?template=欧洲差旅', icon: <GlobalOutlined />, label: '欧洲差旅' },
   { key: '/checklist?template=日本差旅', icon: <GlobalOutlined />, label: '日本差旅' },
   { key: '/checklist?template=国内差旅', icon: <HomeOutlined />, label: '国内差旅' },
   { key: '/checklist?template=new', icon: <PlusOutlined />, label: '添加新清单' },
+  { type: 'divider' as const, label: '储蓄库' },
+  { key: '/sop', icon: <FileTextOutlined />, label: 'SOP知识库' },
+  { key: '/documents', icon: <FolderOutlined />, label: '文档库' },
 ]
 
 export default function MainLayout() {
