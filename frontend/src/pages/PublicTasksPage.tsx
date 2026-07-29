@@ -10,7 +10,7 @@ export default function PublicTasksPage() {
 
   const loadTasks = async () => {
     try {
-      const res = await getTasks(selectedDate, tripFilter)
+      const res = await getTasks(selectedDate, tripFilter === '全部' ? undefined : tripFilter)
       setTasks(res.data)
     } catch { /* silently handle */ }
   }
@@ -24,7 +24,7 @@ export default function PublicTasksPage() {
           <h2 style={{ margin: 0, fontSize: 20 }}>每日任务</h2>
           <div style={{ display: 'flex', gap: 12 }}>
             <DatePicker value={dayjs(selectedDate)} onChange={(d) => setSelectedDate(d?.format('YYYY-MM-DD') || dayjs().format('YYYY-MM-DD'))} />
-            <Segmented options={['全部', '香港', '日本', '欧洲', '国内']} value={tripFilter} onChange={(v) => setTripFilter(v as string)} />
+            <Segmented options={['全部', '香港差旅', '日本差旅', '欧洲差旅', '国内差旅']} value={tripFilter} onChange={(v) => setTripFilter(v as string)} />
           </div>
         </div>
       </Card>
