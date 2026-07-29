@@ -26,7 +26,8 @@ export default function ChecklistPage() {
   const isAdmin = user?.role === 'admin'
 
   const loadItems = async () => {
-    const res = await getChecklistItems(template, filterType)
+    const filterMap: Record<string, string> = { '已准备': 'prepared', '未准备': 'unprepared', '常备': 'essential', '全部': 'all' }
+    const res = await getChecklistItems(template, filterMap[filterType] || 'all')
     setItems(res.data)
   }
 
@@ -82,7 +83,11 @@ export default function ChecklistPage() {
 
         {/* 快速筛选 */}
         <div style={{ marginTop: 12 }}>
-          <Segmented options={['全部', '未准备', '必备', '国际', '电子设备']} value={filterType} onChange={(v) => setFilterType(v as string)} />
+          <Segmented
+            options={template === '香港差旅' ? ['全部', '已准备', '未准备', '常备'] : ['全部', '已准备', '未准备']}
+            value={filterType}
+            onChange={(v) => setFilterType(v as string)}
+          />
         </div>
       </Card>
 

@@ -12,14 +12,12 @@ router = APIRouter(prefix='/api/checklist', tags=['Checklist'])
 @router.get('', response_model=List[ChecklistItemOut])
 def list_items(template: str = 'default', filter_type: str = 'all', db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     q = db.query(ChecklistItem).filter(ChecklistItem.checklist_template == template)
-    if filter_type == 'unprepared':
+    if filter_type == 'prepared':
+        q = q.filter(ChecklistItem.is_prepared == True)
+    elif filter_type == 'unprepared':
         q = q.filter(ChecklistItem.is_prepared == False)
     elif filter_type == 'essential':
         q = q.filter(ChecklistItem.is_essential == True)
-    elif filter_type == 'international':
-        q = q.filter(ChecklistItem.is_international == True)
-    elif filter_type == 'electronic':
-        q = q.filter(ChecklistItem.is_electronic == True)
     return q.all()
 
 @router.post('', response_model=ChecklistItemOut)
