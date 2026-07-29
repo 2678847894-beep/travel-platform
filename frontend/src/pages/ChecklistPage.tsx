@@ -354,9 +354,6 @@ export default function ChecklistPage() {
                   ))}
                 </div>
               </Card>
-                  ))}
-                </div>
-              </Card>
             )
           })}
         </div>
