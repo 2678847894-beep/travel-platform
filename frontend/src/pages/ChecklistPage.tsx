@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useLocation } from 'react-router-dom'
-import { Card, Button, Progress, Space, Input, Segmented, Modal, Form, message, Collapse, Tag } from 'antd'
-import { PlusOutlined, EditOutlined, ExportOutlined, ReloadOutlined, FileTextOutlined } from '@ant-design/icons'
+import { Card, Button, Progress, Space, Input, Segmented, Modal, Form, message, Collapse, Tag, Upload } from 'antd'
+import { PlusOutlined, EditOutlined, ExportOutlined, ReloadOutlined, FileTextOutlined, InboxOutlined } from '@ant-design/icons'
 import { getChecklistItems, createChecklistItem, toggleChecklistItem, deleteChecklistItem } from '../services/api'
 import { useAuthStore } from '../store/authStore'
+
+const { Dragger } = Upload
 
 const TEMPLATES = ['香港差旅', '欧洲差旅', '日本差旅', '国内差旅']
 
@@ -17,6 +19,8 @@ export default function ChecklistPage() {
   const [items, setItems] = useState<any[]>([])
   const [filterType, setFilterType] = useState('全部')
   const [modalOpen, setModalOpen] = useState(false)
+  const [imageBase64, setImageBase64] = useState('')
+  const [previewUrl, setPreviewUrl] = useState('')
 
   useEffect(() => {
     const p = new URLSearchParams(location.search).get('template') || '香港差旅'
@@ -38,10 +42,40 @@ export default function ChecklistPage() {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, is_prepared: !i.is_prepared } : i)))
   }
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handleImageUpload = async (file: File) => {
+    const base64 = await fileToBase64(file)
+    setImageBase64(base64)
+    setPreviewUrl(base64)
+    return false
+  }
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile()
+        if (file) handleImageUpload(file)
+        break
+      }
+    }
+  }
+
   const handleAdd = async (values: any) => {
-    await createChecklistItem({ ...values, checklist_template: template })
+    await createChecklistItem({ ...values, checklist_template: template, image_data: imageBase64 })
     message.success('添加成功')
     setModalOpen(false)
+    setImageBase64('')
+    setPreviewUrl('')
     loadItems()
   }
 
@@ -127,10 +161,9 @@ export default function ChecklistPage() {
                     {item.is_prepared && '✓'}
                   </div>
                   <span style={{ flex: 1 }}>{item.name}</span>
+                  {item.image_data && <img src={item.image_data} alt="" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4 }} />}
                   {item.is_prepared && <Tag color="success">已准备</Tag>}
-                  {item.is_essential && <Tag color="red">必备</Tag>}
-                  {item.is_international && <Tag color="orange">国际</Tag>}
-                  {item.is_electronic && <Tag color="purple">电子</Tag>}
+                  {item.is_essential && <Tag color="red">常备</Tag>}
                   {item.related_doc_id && <FileTextOutlined style={{ color: '#3b82f6' }} />}
                 </div>
               )),
@@ -145,7 +178,7 @@ export default function ChecklistPage() {
       </div>
 
       {/* 添加物品弹窗 */}
-      <Modal title="添加物品" open={modalOpen} onCancel={() => setModalOpen(false)} footer={null}>
+      <Modal title="添加物品" open={modalOpen} onCancel={() => { setModalOpen(false); setImageBase64(''); setPreviewUrl('') }} footer={null}>
         <Form onFinish={handleAdd} layout="vertical">
           <Form.Item name="name" label="物品名称" rules={[{ required: true }]}>
             <Input placeholder="例如: 护照" />
@@ -153,9 +186,33 @@ export default function ChecklistPage() {
           <Form.Item name="category" label="分类" rules={[{ required: true }]}>
             <Input placeholder="例如: 证件票据类" />
           </Form.Item>
-          <Form.Item name="is_essential" valuePropName="checked">
-            <input type="checkbox" /> 标记为常备
+
+          {/* 图片上传：支持拖入、导入、粘贴 */}
+          <Form.Item label="图片">
+            <div onPaste={handlePaste} tabIndex={0} style={{ outline: 'none' }}>
+              <Dragger
+                accept="image/*"
+                showUploadList={false}
+                beforeUpload={handleImageUpload}
+                style={{ padding: previewUrl ? 0 : undefined }}
+              >
+                {previewUrl ? (
+                  <img src={previewUrl} alt="预览" style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain' }} />
+                ) : (
+                  <>
+                    <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+                    <p className="ant-upload-text">点击或拖入图片，或 Ctrl+V 粘贴</p>
+                  </>
+                )}
+              </Dragger>
+            </div>
+            {previewUrl && (
+              <Button type="link" danger size="small" onClick={() => { setImageBase64(''); setPreviewUrl('') }} style={{ marginTop: 8 }}>
+                移除图片
+              </Button>
+            )}
           </Form.Item>
+
           <Button type="primary" htmlType="submit" block>添加</Button>
         </Form>
       </Modal>

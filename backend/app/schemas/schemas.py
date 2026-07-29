@@ -130,6 +130,7 @@ class ChecklistItemOut(BaseModel):
     is_essential: bool = False
     is_international: bool = False
     is_electronic: bool = False
+    image_data: str = ""
     related_doc_id: Optional[int] = None
     class Config:
         from_attributes = True
@@ -141,6 +142,7 @@ class ChecklistItemCreate(BaseModel):
     is_essential: bool = False
     is_international: bool = False
     is_electronic: bool = False
+    image_data: str = ""
 
 
 # ── AI 问答 ──

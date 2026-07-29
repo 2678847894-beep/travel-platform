@@ -79,6 +79,7 @@ class ChecklistItem(Base):
     is_essential = Column(Boolean, default=False)
     is_international = Column(Boolean, default=False)
     is_electronic = Column(Boolean, default=False)
+    image_data = Column(Text, default="")
     related_doc_id = Column(Integer, ForeignKey("document_files.id"), nullable=True)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
