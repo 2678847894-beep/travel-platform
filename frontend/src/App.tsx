@@ -17,7 +17,6 @@ import InboxPage from './pages/InboxPage'
 import ChecklistPage from './pages/ChecklistPage'
 import SopPage from './pages/SopPage'
 import SopDetailPage from './pages/SopDetailPage'
-import TasksPage from './pages/TasksPage'
 import DocumentLibrary from './pages/DocumentLibrary'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -42,13 +41,12 @@ export default function App() {
       {/* 管理后台 - 需登录 */}
       <Route path="/chalv/login" element={<LoginPage />} />
       <Route path="/chalv/*" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-        <Route index element={<Navigate to="/chalv/today" replace />} />
-        <Route path="today" element={<TodayPage />} />
+        <Route index element={<Navigate to="/chalv/tasks" replace />} />
+        <Route path="tasks" element={<TodayPage />} />
         <Route path="inbox" element={<InboxPage />} />
         <Route path="checklist" element={<ChecklistPage />} />
         <Route path="sop" element={<SopPage />} />
         <Route path="sop/:id" element={<SopDetailPage />} />
-        <Route path="tasks" element={<TasksPage />} />
         <Route path="documents" element={<DocumentLibrary />} />
       </Route>
     </Routes>

@@ -84,7 +84,9 @@ class TaskOut(BaseModel):
     id: int
     title: str
     task_date: datetime
+    end_date: Optional[datetime] = None
     task_time: str = ""
+    end_time: str = ""
     location: str = ""
     description: str = ""
     trip_filter: str = "全部"
@@ -96,7 +98,9 @@ class TaskOut(BaseModel):
 class TaskCreate(BaseModel):
     title: str
     task_date: datetime
+    end_date: Optional[datetime] = None
     task_time: str = ""
+    end_time: str = ""
     location: str = ""
     description: str = ""
     trip_filter: str = "全部"

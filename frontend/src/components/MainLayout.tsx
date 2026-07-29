@@ -4,7 +4,7 @@ import { Layout, Menu, Input, Avatar, Tooltip } from 'antd'
 import {
   MenuFoldOutlined, MenuUnfoldOutlined, SearchOutlined,
   CheckSquareOutlined, InboxOutlined, FileTextOutlined,
-  CalendarOutlined, FolderOutlined, SettingOutlined,
+  FolderOutlined, SettingOutlined,
   CheckCircleOutlined, GlobalOutlined, HomeOutlined,
   PlusOutlined, RobotOutlined
 } from '@ant-design/icons'
@@ -14,12 +14,11 @@ import AiAssistant from './AiAssistant'
 const { Sider, Content, Header } = Layout
 
 const menuItems = [
-  { key: '/today', icon: <CheckSquareOutlined />, label: '今天' },
+  { key: '/tasks', icon: <CheckSquareOutlined />, label: '每日任务' },
   { key: '/inbox', icon: <InboxOutlined />, label: '收集箱' },
   { type: 'divider' as const, label: '差旅专属板块' },
   { key: '/checklist', icon: <CheckCircleOutlined />, label: '物品清单' },
   { key: '/sop', icon: <FileTextOutlined />, label: 'SOP知识库' },
-  { key: '/tasks', icon: <CalendarOutlined />, label: '每日任务' },
   { key: '/documents', icon: <FolderOutlined />, label: '文档库' },
   { type: 'divider' as const, label: '快捷清单模板' },
   { key: '/checklist?template=香港差旅', icon: <GlobalOutlined />, label: '香港差旅' },
@@ -99,7 +98,6 @@ export default function MainLayout() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <Input prefix={<SearchOutlined />} placeholder="搜索差旅SOP、文档、任务..." style={{ width: 320, borderRadius: 8 }} />
-            <Avatar style={{ background: '#3b82f6' }} icon={<span>👤</span>} />
           </div>
         </Header>
 
