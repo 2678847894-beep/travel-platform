@@ -179,6 +179,7 @@ export default function ChecklistPage() {
 
       {/* 添加物品弹窗 */}
       <Modal title="添加物品" open={modalOpen} onCancel={() => { setModalOpen(false); setImageBase64(''); setPreviewUrl('') }} footer={null}>
+        <div onPaste={handlePaste} tabIndex={-1}>
         <Form onFinish={handleAdd} layout="vertical">
           <Form.Item name="name" label="物品名称" rules={[{ required: true }]}>
             <Input placeholder="例如: 护照" />
@@ -189,23 +190,22 @@ export default function ChecklistPage() {
 
           {/* 图片上传：支持拖入、导入、粘贴 */}
           <Form.Item label="图片">
-            <div onPaste={handlePaste} tabIndex={0} style={{ outline: 'none' }}>
-              <Dragger
-                accept="image/*"
-                showUploadList={false}
-                beforeUpload={handleImageUpload}
-                style={{ padding: previewUrl ? 0 : undefined }}
-              >
-                {previewUrl ? (
-                  <img src={previewUrl} alt="预览" style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain' }} />
-                ) : (
-                  <>
-                    <p className="ant-upload-drag-icon"><InboxOutlined /></p>
-                    <p className="ant-upload-text">点击或拖入图片，或 Ctrl+V 粘贴</p>
-                  </>
-                )}
-              </Dragger>
-            </div>
+            <Dragger
+              accept="image/*"
+              showUploadList={false}
+              beforeUpload={handleImageUpload}
+              style={{ padding: previewUrl ? 0 : undefined }}
+            >
+              {previewUrl ? (
+                <img src={previewUrl} alt="预览" style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain' }} />
+              ) : (
+                <>
+                  <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+                  <p className="ant-upload-text">拖入图片或点击选择</p>
+                  <p className="ant-upload-hint">也可在弹窗内任意位置 Ctrl+V 粘贴图片</p>
+                </>
+              )}
+            </Dragger>
             {previewUrl && (
               <Button type="link" danger size="small" onClick={() => { setImageBase64(''); setPreviewUrl('') }} style={{ marginTop: 8 }}>
                 移除图片
@@ -215,6 +215,7 @@ export default function ChecklistPage() {
 
           <Button type="primary" htmlType="submit" block>添加</Button>
         </Form>
+        </div>
       </Modal>
     </div>
   )
