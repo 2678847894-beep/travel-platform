@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 from app.core.database import engine, Base
 from app.core.config import settings
-from app.api import auth, sop, tasks, documents, checklist, ai
+from app.api import auth, sop, tasks, documents, checklist, trips, ai
 
 Base.metadata.create_all(bind=engine)
 
@@ -26,6 +26,7 @@ app.include_router(sop.router)
 app.include_router(tasks.router)
 app.include_router(documents.router)
 app.include_router(checklist.router)
+app.include_router(trips.router)
 app.include_router(ai.router)
 
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)

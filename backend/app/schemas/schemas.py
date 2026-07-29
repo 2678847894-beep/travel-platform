@@ -147,6 +147,22 @@ class ChecklistItemCreate(BaseModel):
     trip_date: Optional[date] = None
 
 
+# ── 行程 ──
+class TripOut(BaseModel):
+    id: int
+    name: str
+    template: str
+    trip_date: Optional[date] = None
+    created_at: Optional[datetime] = None
+    class Config:
+        from_attributes = True
+
+class TripCreate(BaseModel):
+    name: str
+    template: str
+    trip_date: Optional[date] = None
+
+
 # ── AI 问答 ──
 class AiAskRequest(BaseModel):
     question: str
