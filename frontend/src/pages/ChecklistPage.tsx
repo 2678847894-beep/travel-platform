@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useLocation } from 'react-router-dom'
 import { Card, Button, Progress, Space, Input, Segmented, Modal, Form, message, Tag, Upload, Select } from 'antd'
-import { PlusOutlined, ReloadOutlined, FileTextOutlined, InboxOutlined, DeleteOutlined } from '@ant-design/icons'
-import { getChecklistItems, createChecklistItem, deleteChecklistItem } from '../services/api'
+import { PlusOutlined, ReloadOutlined, FileTextOutlined, InboxOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
+import { getChecklistItems, createChecklistItem, updateChecklistItem, deleteChecklistItem } from '../services/api'
 import { getTrips, createTrip, deleteTrip, getTripItems, toggleTripItem } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
@@ -21,6 +21,8 @@ export default function ChecklistPage() {
   const [items, setItems] = useState<any[]>([])
   const [filterType, setFilterType] = useState('全部')
   const [modalOpen, setModalOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const [editItem, setEditItem] = useState<any>(null)
   const [tripModalOpen, setTripModalOpen] = useState(false)
   const [imageBase64, setImageBase64] = useState('')
   const [previewUrl, setPreviewUrl] = useState('')
@@ -102,6 +104,28 @@ export default function ChecklistPage() {
   const handleDeleteItem = async (id: number) => {
     await deleteChecklistItem(id)
     message.success('已删除')
+    loadItems()
+  }
+
+  const handleEditItem = (item: any) => {
+    setEditItem(item)
+    setEditModalOpen(true)
+    setImageBase64(item.image_data || '')
+    setPreviewUrl(item.image_data || '')
+  }
+
+  const handleUpdateItem = async (values: any) => {
+    if (!editItem) return
+    await updateChecklistItem(editItem.id, {
+      ...values,
+      checklist_template: template,
+      image_data: imageBase64,
+    })
+    message.success('已更新')
+    setEditModalOpen(false)
+    setEditItem(null)
+    setImageBase64('')
+    setPreviewUrl('')
     loadItems()
   }
 
@@ -216,7 +240,7 @@ export default function ChecklistPage() {
                 key={cat}
                 title={
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 600, fontSize: 15 }}>{cat}</span>
+                    <span style={{ fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>{cat}</span>
                     <Tag>{catPrepared}/{catItems.length}</Tag>
                   </div>
                 }
@@ -277,8 +301,13 @@ export default function ChecklistPage() {
                           <Input
                             size="small"
                             placeholder="数量"
-                            style={{ width: 60 }}
+                            style={{ width: 72 }}
                             onClick={(e) => e.stopPropagation()}
+                          />
+                          <Button
+                            type="text" size="small" icon={<EditOutlined />}
+                            onClick={(e) => { e.stopPropagation(); handleEditItem(item) }}
+                            style={{ color: '#64748b' }}
                           />
                           <div style={{ flex: 1 }} />
                           {item.is_essential && <Tag color="red" style={{ margin: 0, fontSize: 11 }}>常备</Tag>}
@@ -342,6 +371,42 @@ export default function ChecklistPage() {
             )}
           </Form.Item>
           <Button type="primary" htmlType="submit" block>添加</Button>
+        </Form>
+        </div>
+      </Modal>
+
+      {/* 编辑物品弹窗 */}
+      <Modal title="编辑物品" open={editModalOpen} onCancel={() => { setEditModalOpen(false); setEditItem(null); setImageBase64(''); setPreviewUrl('') }} footer={null}>
+        <div onPaste={handlePaste} tabIndex={-1}>
+        <Form onFinish={handleUpdateItem} layout="vertical" initialValues={editItem ? { name: editItem.name, category: editItem.category, is_essential: editItem.is_essential } : {}}>
+          <Form.Item name="name" label="物品名称" rules={[{ required: true }]}>
+            <Input placeholder="例如: 护照" />
+          </Form.Item>
+          <Form.Item name="category" label="分类" rules={[{ required: true }]}>
+            <Input placeholder="例如: 证件票据类" />
+          </Form.Item>
+          <Form.Item name="is_essential" valuePropName="checked">
+            <input type="checkbox" /> 标记为常备
+          </Form.Item>
+          <Form.Item label="图片">
+            <Dragger accept="image/*" showUploadList={false} beforeUpload={handleImageUpload}
+              style={{ padding: previewUrl ? 0 : undefined }}>
+              {previewUrl ? (
+                <img src={previewUrl} alt="" style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain' }} />
+              ) : (
+                <>
+                  <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+                  <p className="ant-upload-text">拖入图片或点击更换</p>
+                </>
+              )}
+            </Dragger>
+            {previewUrl && (
+              <Button type="link" danger size="small" onClick={() => { setImageBase64(''); setPreviewUrl('') }} style={{ marginTop: 8 }}>
+                移除图片
+              </Button>
+            )}
+          </Form.Item>
+          <Button type="primary" htmlType="submit" block>保存</Button>
         </Form>
         </div>
       </Modal>

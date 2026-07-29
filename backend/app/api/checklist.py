@@ -38,3 +38,17 @@ def toggle_item(item_id: int, db: Session = Depends(get_db), _: User = Depends(g
     item.is_prepared = not item.is_prepared
     db.commit()
     return {'ok': True}
+
+
+@router.put('/{item_id}')
+def update_item(item_id: int, body: ChecklistItemCreate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    item = db.query(ChecklistItem).filter(ChecklistItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404)
+    item.name = body.name
+    item.category = body.category
+    if body.image_data:
+        item.image_data = body.image_data
+    item.is_essential = body.is_essential
+    db.commit()
+    return {'ok': True}
