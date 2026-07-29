@@ -226,33 +226,22 @@ export default function ChecklistPage() {
                   {catItems.map((item) => (
                     <div
                       key={item.id}
-                      onClick={() => handleToggle(item.id)}
                       style={{
                         border: `2px solid ${item.is_prepared ? '#10b981' : '#e2e8f0'}`,
                         borderRadius: 8,
-                        padding: 12,
+                        overflow: 'hidden',
                         cursor: 'pointer',
                         background: item.is_prepared ? '#f0fdf4' : '#fff',
                         transition: 'all 0.2s',
-                        position: 'relative',
                       }}
                     >
-                      {/* 勾选状态 */}
-                      <div style={{
-                        position: 'absolute', top: 8, right: 8, width: 24, height: 24, borderRadius: '50%',
-                        background: item.is_prepared ? '#10b981' : '#f1f5f9',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', fontSize: 14, fontWeight: 700,
-                      }}>
-                        {item.is_prepared ? '✓' : ''}
-                      </div>
-
                       {/* 图片 */}
-                      <div style={{
-                        width: '100%', height: 120, borderRadius: 6, marginBottom: 8,
-                        background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        overflow: 'hidden',
-                      }}>
+                      <div
+                        onClick={() => handleToggle(item.id)}
+                        style={{
+                          width: '100%', height: 120, background: '#f8fafc',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
                         {item.image_data ? (
                           <img src={item.image_data} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
@@ -260,20 +249,40 @@ export default function ChecklistPage() {
                         )}
                       </div>
 
-                      {/* 名称 */}
-                      <div style={{
-                        fontWeight: 600, fontSize: 14, marginBottom: 6,
-                        textDecoration: item.is_prepared ? 'line-through' : 'none',
-                        color: item.is_prepared ? '#94a3b8' : '#1e293b',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {item.name}
-                      </div>
+                      {/* 信息区 */}
+                      <div style={{ padding: 10 }}>
+                        {/* 名称 */}
+                        <div style={{
+                          fontWeight: 600, fontSize: 14, marginBottom: 8,
+                          textDecoration: item.is_prepared ? 'line-through' : 'none',
+                          color: item.is_prepared ? '#94a3b8' : '#1e293b',
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                          {item.name}
+                        </div>
 
-                      {/* 标签 */}
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                        {item.is_essential && <Tag color="red" style={{ margin: 0, fontSize: 11 }}>常备</Tag>}
-                        {item.is_prepared && <Tag color="success" style={{ margin: 0, fontSize: 11 }}>已准备</Tag>}
+                        {/* 底部：勾选 + 数量 + 标签 */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div
+                            onClick={() => handleToggle(item.id)}
+                            style={{
+                              width: 22, height: 22, borderRadius: '50%',
+                              background: item.is_prepared ? '#10b981' : '#f1f5f9',
+                              border: `2px solid ${item.is_prepared ? '#10b981' : '#cbd5e1'}`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              color: '#fff', fontSize: 12, fontWeight: 700, flexShrink: 0,
+                            }}>
+                            {item.is_prepared ? '✓' : ''}
+                          </div>
+                          <Input
+                            size="small"
+                            placeholder="数量"
+                            style={{ width: 60 }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <div style={{ flex: 1 }} />
+                          {item.is_essential && <Tag color="red" style={{ margin: 0, fontSize: 11 }}>常备</Tag>}
+                        </div>
                       </div>
                     </div>
                   ))}
