@@ -43,8 +43,8 @@ export default function TodayPage() {
     try {
       await createTask({
         title: values.title,
-        task_date: values.task_date.format('YYYY-MM-DD'),
-        end_date: values.end_date ? values.end_date.format('YYYY-MM-DD') : null,
+        task_date: values.task_date.format('YYYY-MM-DD') + ' 00:00:00',
+        end_date: values.end_date ? values.end_date.format('YYYY-MM-DD') + ' 00:00:00' : null,
         task_time: values.task_time ? values.task_time.format('HH:mm') : '',
         end_time: values.end_time ? values.end_time.format('HH:mm') : '',
         trip_filter: values.trip_filter || '全部',
