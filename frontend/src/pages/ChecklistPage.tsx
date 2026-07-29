@@ -154,13 +154,7 @@ export default function ChecklistPage() {
             <Input placeholder="例如: 证件票据类" />
           </Form.Item>
           <Form.Item name="is_essential" valuePropName="checked">
-            <input type="checkbox" /> 标记为必备
-          </Form.Item>
-          <Form.Item name="is_international" valuePropName="checked">
-            <input type="checkbox" /> 标记为国际
-          </Form.Item>
-          <Form.Item name="is_electronic" valuePropName="checked">
-            <input type="checkbox" /> 标记为电子设备
+            <input type="checkbox" /> 标记为常备
           </Form.Item>
           <Button type="primary" htmlType="submit" block>添加</Button>
         </Form>
