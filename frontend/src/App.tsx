@@ -20,9 +20,11 @@ import SopDetailPage from './pages/SopDetailPage'
 import DocumentLibrary from './pages/DocumentLibrary'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const token = useAuthStore((s) => s.token)
-  if (!token) return <Navigate to="/chalv/login" replace />
+  // 临时关闭登录验证 - 开发中
   return <>{children}</>
+  // const token = useAuthStore((s) => s.token)
+  // if (!token) return <Navigate to="/chalv/login" replace />
+  // return <>{children}</>
 }
 
 export default function App() {
