@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import cast, Date
 from typing import List
 from app.core.database import get_db
 from app.core.auth import get_current_user, require_admin
@@ -13,7 +14,7 @@ router = APIRouter(prefix='/api/tasks', tags=['Tasks'])
 def list_tasks(task_date: str = None, trip_filter: str = None, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     q = db.query(DailyTask)
     if task_date:
-        q = q.filter(DailyTask.task_date == task_date)
+        q = q.filter(cast(DailyTask.task_date, Date) == task_date)
     if trip_filter and trip_filter != 'all':
         q = q.filter(DailyTask.trip_filter == trip_filter)
     return q.order_by(DailyTask.task_time, DailyTask.id).all()
