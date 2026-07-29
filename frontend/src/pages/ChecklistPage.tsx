@@ -24,6 +24,8 @@ export default function ChecklistPage() {
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [editItem, setEditItem] = useState<any>(null)
   const [tripModalOpen, setTripModalOpen] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<string | null>(null)
+  const [categoryName, setCategoryName] = useState('')
   const [imageBase64, setImageBase64] = useState('')
   const [previewUrl, setPreviewUrl] = useState('')
   const user = useAuthStore((s) => s.user)
@@ -126,6 +128,23 @@ export default function ChecklistPage() {
     setEditItem(null)
     setImageBase64('')
     setPreviewUrl('')
+    loadItems()
+  }
+
+  const handleRenameCategory = async (oldCat: string) => {
+    if (!categoryName || categoryName === oldCat) { setEditingCategory(null); return }
+    const itemsInCat = items.filter((i) => i.category === oldCat)
+    for (const item of itemsInCat) {
+      await updateChecklistItem(item.id, {
+        name: item.name,
+        category: categoryName,
+        checklist_template: template,
+        image_data: item.image_data || '',
+        is_essential: item.is_essential,
+      })
+    }
+    message.success('分类已重命名')
+    setEditingCategory(null)
     loadItems()
   }
 
@@ -240,80 +259,101 @@ export default function ChecklistPage() {
                 key={cat}
                 title={
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontWeight: 600, fontSize: 15, cursor: 'pointer' }}>{cat}</span>
+                    {editingCategory === cat ? (
+                      <Input
+                        size="small"
+                        value={categoryName}
+                        onChange={(e) => setCategoryName(e.target.value)}
+                        onPressEnter={() => handleRenameCategory(cat)}
+                        onBlur={() => handleRenameCategory(cat)}
+                        style={{ width: 160 }}
+                        autoFocus
+                      />
+                    ) : (
+                      <span
+                        onClick={() => { setEditingCategory(cat); setCategoryName(cat) }}
+                        style={{ fontWeight: 600, fontSize: 15, cursor: 'pointer' }}
+                      >
+                        {cat} <EditOutlined style={{ fontSize: 12, color: '#94a3b8', marginLeft: 6 }} />
+                      </span>
+                    )}
                     <Tag>{catPrepared}/{catItems.length}</Tag>
                   </div>
                 }
                 style={{ marginBottom: 16 }}
               >
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 12 }}>
                   {catItems.map((item) => (
                     <div
                       key={item.id}
                       style={{
-                        border: `2px solid ${item.is_prepared ? '#10b981' : '#e2e8f0'}`,
-                        borderRadius: 8,
+                        border: `1px solid ${item.is_prepared ? '#10b981' : '#e2e8f0'}`,
+                        borderRadius: 10,
                         overflow: 'hidden',
-                        cursor: 'pointer',
                         background: item.is_prepared ? '#f0fdf4' : '#fff',
                         transition: 'all 0.2s',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
                       }}
                     >
                       {/* 图片 */}
                       <div
                         onClick={() => handleToggle(item.id)}
                         style={{
-                          width: '100%', height: 120, background: '#f8fafc',
+                          width: '100%', height: 110, background: '#f8fafc',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer',
                         }}>
                         {item.image_data ? (
                           <img src={item.image_data} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
-                          <FileTextOutlined style={{ fontSize: 32, color: '#cbd5e1' }} />
+                          <div style={{ textAlign: 'center', color: '#cbd5e1' }}>
+                            <FileTextOutlined style={{ fontSize: 28 }} />
+                            <div style={{ fontSize: 11, marginTop: 4 }}>暂无图片</div>
+                          </div>
                         )}
                       </div>
 
                       {/* 信息区 */}
-                      <div style={{ padding: 10 }}>
-                        {/* 名称 */}
+                      <div style={{ padding: '8px 10px 10px' }}>
                         <div style={{
-                          fontWeight: 600, fontSize: 14, marginBottom: 8,
+                          fontWeight: 600, fontSize: 13, marginBottom: 8,
                           textDecoration: item.is_prepared ? 'line-through' : 'none',
                           color: item.is_prepared ? '#94a3b8' : '#1e293b',
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>
                           {item.name}
                         </div>
-
-                        {/* 底部：勾选 + 数量 + 标签 */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <div
                             onClick={() => handleToggle(item.id)}
                             style={{
-                              width: 22, height: 22, borderRadius: '50%',
-                              background: item.is_prepared ? '#10b981' : '#f1f5f9',
-                              border: `2px solid ${item.is_prepared ? '#10b981' : '#cbd5e1'}`,
+                              width: 20, height: 20, borderRadius: '50%',
+                              background: item.is_prepared ? '#10b981' : '#fff',
+                              border: `2px solid ${item.is_prepared ? '#10b981' : '#d1d5db'}`,
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              color: '#fff', fontSize: 12, fontWeight: 700, flexShrink: 0,
+                              color: '#fff', fontSize: 11, fontWeight: 700, flexShrink: 0, cursor: 'pointer',
                             }}>
                             {item.is_prepared ? '✓' : ''}
                           </div>
                           <Input
                             size="small"
                             placeholder="数量"
-                            style={{ width: 72 }}
+                            style={{ width: 56, fontSize: 12 }}
                             onClick={(e) => e.stopPropagation()}
                           />
                           <Button
                             type="text" size="small" icon={<EditOutlined />}
                             onClick={(e) => { e.stopPropagation(); handleEditItem(item) }}
-                            style={{ color: '#64748b' }}
+                            style={{ color: '#94a3b8', padding: '0 4px', minWidth: 24 }}
                           />
                           <div style={{ flex: 1 }} />
-                          {item.is_essential && <Tag color="red" style={{ margin: 0, fontSize: 11 }}>常备</Tag>}
+                          {item.is_essential && <Tag color="red" style={{ margin: 0, fontSize: 10, lineHeight: '16px' }}>常备</Tag>}
                         </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+              </Card>
                   ))}
                 </div>
               </Card>
