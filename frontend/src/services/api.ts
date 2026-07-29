@@ -62,8 +62,8 @@ export const uploadDocument = (formData: FormData) =>
 export const deleteDocumentFile = (id: number) => api.delete(`/documents/${id}`)
 
 // Checklist
-export const getChecklistItems = (template?: string, filterType = '全部') =>
-  api.get('/checklist', { params: { template, filter_type: filterType } })
+export const getChecklistItems = (template?: string, filterType = '全部', tripDate?: string) =>
+  api.get('/checklist', { params: { template, filter_type: filterType, trip_date: tripDate || undefined } })
 export const createChecklistItem = (data: any) => api.post('/checklist', data)
 export const toggleChecklistItem = (id: number) => api.put(`/checklist/${id}/toggle`)
 export const deleteChecklistItem = (id: number) => api.delete(`/checklist/${id}`)

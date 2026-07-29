@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, List
 
 
@@ -131,6 +131,7 @@ class ChecklistItemOut(BaseModel):
     is_international: bool = False
     is_electronic: bool = False
     image_data: str = ""
+    trip_date: Optional[date] = None
     related_doc_id: Optional[int] = None
     class Config:
         from_attributes = True
@@ -143,6 +144,7 @@ class ChecklistItemCreate(BaseModel):
     is_international: bool = False
     is_electronic: bool = False
     image_data: str = ""
+    trip_date: Optional[date] = None
 
 
 # ── AI 问答 ──

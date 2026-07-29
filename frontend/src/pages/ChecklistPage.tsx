@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useLocation } from 'react-router-dom'
-import { Card, Button, Progress, Space, Input, Segmented, Modal, Form, message, Collapse, Tag, Upload } from 'antd'
+import { Card, Button, Progress, Space, Input, Segmented, Modal, Form, message, Collapse, Tag, Upload, DatePicker } from 'antd'
 import { PlusOutlined, EditOutlined, ExportOutlined, ReloadOutlined, FileTextOutlined, InboxOutlined } from '@ant-design/icons'
 import { getChecklistItems, createChecklistItem, toggleChecklistItem, deleteChecklistItem } from '../services/api'
+import dayjs from 'dayjs'
 import { useAuthStore } from '../store/authStore'
 
 const { Dragger } = Upload
@@ -19,6 +20,7 @@ export default function ChecklistPage() {
   const [items, setItems] = useState<any[]>([])
   const [filterType, setFilterType] = useState('全部')
   const [modalOpen, setModalOpen] = useState(false)
+  const [tripDate, setTripDate] = useState<string>('')
   const [imageBase64, setImageBase64] = useState('')
   const [previewUrl, setPreviewUrl] = useState('')
 
@@ -31,11 +33,11 @@ export default function ChecklistPage() {
 
   const loadItems = async () => {
     const filterMap: Record<string, string> = { '已准备': 'prepared', '未准备': 'unprepared', '常备': 'essential', '全部': 'all' }
-    const res = await getChecklistItems(template, filterMap[filterType] || 'all')
+    const res = await getChecklistItems(template, filterMap[filterType] || 'all', tripDate || undefined)
     setItems(res.data)
   }
 
-  useEffect(() => { loadItems() }, [template, filterType])
+  useEffect(() => { loadItems() }, [template, filterType, tripDate])
 
   const handleToggle = async (id: number) => {
     await toggleChecklistItem(id)
@@ -71,7 +73,7 @@ export default function ChecklistPage() {
   }
 
   const handleAdd = async (values: any) => {
-    await createChecklistItem({ ...values, checklist_template: template, image_data: imageBase64 })
+    await createChecklistItem({ ...values, checklist_template: template, image_data: imageBase64, trip_date: tripDate || null })
     message.success('添加成功')
     setModalOpen(false)
     setImageBase64('')
@@ -97,6 +99,13 @@ export default function ChecklistPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <h2 style={{ margin: 0, fontSize: 20 }}>{template === '默认' ? '物品清单' : template}</h2>
+            <DatePicker
+              placeholder="选择出发日期"
+              value={tripDate ? dayjs(tripDate) : null}
+              onChange={(d) => setTripDate(d ? d.format('YYYY-MM-DD') : '')}
+              allowClear
+              style={{ width: 160 }}
+            />
           </div>
           <Space>
             {isAdmin && (
