@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useLocation } from 'react-router-dom'
-import { Card, Button, Progress, Space, Input, Segmented, Modal, Form, message, Collapse, Tag, Upload, Select } from 'antd'
+import { Card, Button, Progress, Space, Input, Segmented, Modal, Form, message, Tag, Upload, Select } from 'antd'
 import { PlusOutlined, ReloadOutlined, FileTextOutlined, InboxOutlined, DeleteOutlined } from '@ant-design/icons'
 import { getChecklistItems, createChecklistItem, deleteChecklistItem } from '../services/api'
 import { getTrips, createTrip, deleteTrip, getTripItems, toggleTripItem } from '../services/api'
@@ -208,50 +208,80 @@ export default function ChecklistPage() {
       ) : Object.keys(grouped).length === 0 ? (
         <Card><div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>暂无物品</div></Card>
       ) : (
-        <Collapse
-          defaultActiveKey={Object.keys(grouped)}
-          items={Object.entries(grouped).map(([cat, catItems]) => {
+        <div>
+          {Object.entries(grouped).map(([cat, catItems]) => {
             const catPrepared = catItems.filter((i) => i.is_prepared).length
-            return {
-              key: cat,
-              label: (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 600 }}>{cat}</span>
-                  <span style={{ fontSize: 13, color: '#64748b' }}>({catPrepared}/{catItems.length})</span>
-                </div>
-              ),
-              children: catItems.map((item) => (
-                <div
-                  key={item.id}
-                  style={{
-                    padding: '10px 12px', borderBottom: '1px solid #f1f5f9',
-                    display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer',
-                  }}
-                  onClick={() => handleToggle(item.id)}
-                >
-                  <div style={{
-                    width: 24, height: 24, borderRadius: '50%',
-                    border: `2px solid ${item.is_prepared ? '#10b981' : '#cbd5e1'}`,
-                    background: item.is_prepared ? '#10b981' : 'transparent',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', flexShrink: 0, transition: 'all 0.3s',
-                  }}>
-                    {item.is_prepared && '✓'}
+            return (
+              <Card
+                key={cat}
+                title={
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 600, fontSize: 15 }}>{cat}</span>
+                    <Tag>{catPrepared}/{catItems.length}</Tag>
                   </div>
-                  <span style={{ flex: 1 }}>{item.name}</span>
-                  {item.image_data && <img src={item.image_data} alt="" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4 }} />}
-                  {item.is_prepared && <Tag color="success">已准备</Tag>}
-                  {item.is_essential && <Tag color="red">常备</Tag>}
-                  {item.related_doc_id && <FileTextOutlined style={{ color: '#3b82f6' }} />}
-                  {isAdmin && (
-                    <Button type="text" danger size="small" icon={<DeleteOutlined />}
-                      onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id) }} />
-                  )}
+                }
+                style={{ marginBottom: 16 }}
+              >
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
+                  {catItems.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => handleToggle(item.id)}
+                      style={{
+                        border: `2px solid ${item.is_prepared ? '#10b981' : '#e2e8f0'}`,
+                        borderRadius: 8,
+                        padding: 12,
+                        cursor: 'pointer',
+                        background: item.is_prepared ? '#f0fdf4' : '#fff',
+                        transition: 'all 0.2s',
+                        position: 'relative',
+                      }}
+                    >
+                      {/* 勾选状态 */}
+                      <div style={{
+                        position: 'absolute', top: 8, right: 8, width: 24, height: 24, borderRadius: '50%',
+                        background: item.is_prepared ? '#10b981' : '#f1f5f9',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#fff', fontSize: 14, fontWeight: 700,
+                      }}>
+                        {item.is_prepared ? '✓' : ''}
+                      </div>
+
+                      {/* 图片 */}
+                      <div style={{
+                        width: '100%', height: 120, borderRadius: 6, marginBottom: 8,
+                        background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        overflow: 'hidden',
+                      }}>
+                        {item.image_data ? (
+                          <img src={item.image_data} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <FileTextOutlined style={{ fontSize: 32, color: '#cbd5e1' }} />
+                        )}
+                      </div>
+
+                      {/* 名称 */}
+                      <div style={{
+                        fontWeight: 600, fontSize: 14, marginBottom: 6,
+                        textDecoration: item.is_prepared ? 'line-through' : 'none',
+                        color: item.is_prepared ? '#94a3b8' : '#1e293b',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {item.name}
+                      </div>
+
+                      {/* 标签 */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {item.is_essential && <Tag color="red" style={{ margin: 0, fontSize: 11 }}>常备</Tag>}
+                        {item.is_prepared && <Tag color="success" style={{ margin: 0, fontSize: 11 }}>已准备</Tag>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )),
-            }
+              </Card>
+            )
           })}
-        />
+        </div>
       )}
 
       {selectedTripId && (
