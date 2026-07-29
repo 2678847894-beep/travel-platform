@@ -53,8 +53,7 @@ export default function ChecklistPage() {
       <Card style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <h2 style={{ margin: 0, fontSize: 20 }}>物品清单</h2>
-            <Tag color="blue">{template}</Tag>
+            <h2 style={{ margin: 0, fontSize: 20 }}>{template === '默认' ? '物品清单' : template}</h2>
           </div>
           <Space>
             {isAdmin && (
