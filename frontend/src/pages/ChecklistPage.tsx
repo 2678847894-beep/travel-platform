@@ -14,6 +14,11 @@ export default function ChecklistPage() {
   const [items, setItems] = useState<any[]>([])
   const [filterType, setFilterType] = useState('全部')
   const [modalOpen, setModalOpen] = useState(false)
+
+  useEffect(() => {
+    const p = searchParams.get('template') || '香港差旅'
+    setTemplate(p === 'new' ? '默认' : p)
+  }, [searchParams])
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'admin'
 
