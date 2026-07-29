@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useLocation } from 'react-router-dom'
 import { Card, Button, Progress, Space, Input, Segmented, Modal, Form, message, Collapse, Tag } from 'antd'
 import { PlusOutlined, EditOutlined, ExportOutlined, ReloadOutlined, FileTextOutlined } from '@ant-design/icons'
 import { getChecklistItems, createChecklistItem, toggleChecklistItem, deleteChecklistItem } from '../services/api'
@@ -9,16 +9,19 @@ const TEMPLATES = ['香港差旅', '欧洲差旅', '日本差旅', '国内差旅
 
 export default function ChecklistPage() {
   const [searchParams] = useSearchParams()
-  const templateParam = searchParams.get('template') || '香港差旅'
-  const [template, setTemplate] = useState(templateParam === 'new' ? '默认' : templateParam)
+  const location = useLocation()
+  const [template, setTemplate] = useState(() => {
+    const p = searchParams.get('template') || '香港差旅'
+    return p === 'new' ? '默认' : p
+  })
   const [items, setItems] = useState<any[]>([])
   const [filterType, setFilterType] = useState('全部')
   const [modalOpen, setModalOpen] = useState(false)
 
   useEffect(() => {
-    const p = searchParams.get('template') || '香港差旅'
+    const p = new URLSearchParams(location.search).get('template') || '香港差旅'
     setTemplate(p === 'new' ? '默认' : p)
-  }, [searchParams])
+  }, [location.search])
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'admin'
 
