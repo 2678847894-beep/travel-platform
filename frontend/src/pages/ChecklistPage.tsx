@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useLocation } from 'react-router-dom'
-import { Card, Button, Progress, Space, Input, Segmented, Modal, Form, message, Tag, Upload, Select } from 'antd'
-import { PlusOutlined, ReloadOutlined, FileTextOutlined, InboxOutlined, HolderOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
-import { getChecklistItems, createChecklistItem, updateChecklistItem, deleteChecklistItem, reorderChecklistItems } from '../services/api'
+import { Card, Button, Progress, Space, Input, Segmented, Modal, Form, message, Tag, Upload, Select, Table } from 'antd'
+import { PlusOutlined, ReloadOutlined, FileTextOutlined, InboxOutlined, HolderOutlined, DeleteOutlined, EditOutlined, UploadOutlined } from '@ant-design/icons'
+import { getChecklistItems, createChecklistItem, updateChecklistItem, deleteChecklistItem, reorderChecklistItems, aiImportPreview, aiImportConfirm } from '../services/api'
 import { getTrips, createTrip, deleteTrip, getTripItems, toggleTripItem } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 import {
@@ -158,6 +158,11 @@ export default function ChecklistPage() {
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'admin'
 
+  // AI 导入
+  const [aiPreviewOpen, setAiPreviewOpen] = useState(false)
+  const [aiPreviewItems, setAiPreviewItems] = useState<{ name: string; category: string; extras: string }[]>([])
+  const [aiImportLoading, setAiImportLoading] = useState(false)
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -264,6 +269,45 @@ export default function ChecklistPage() {
     setImageBase64('')
     setPreviewUrl('')
     loadItems()
+  }
+
+  // AI 导入：上传 Excel 并预览
+  const handleAiImportUpload = async (file: File) => {
+    setAiImportLoading(true)
+    try {
+      const res = await aiImportPreview(file)
+      if (res.data.items && res.data.items.length > 0) {
+        setAiPreviewItems(res.data.items)
+        setAiPreviewOpen(true)
+      } else {
+        message.warning('未识别到任何物品，请检查 Excel 内容')
+      }
+    } catch (err: any) {
+      message.error(err.response?.data?.detail || '解析失败，请检查文件格式')
+    } finally {
+      setAiImportLoading(false)
+    }
+    return false
+  }
+
+  // AI 导入：确认并批量创建
+  const handleAiImportConfirm = async () => {
+    setAiImportLoading(true)
+    try {
+      await aiImportConfirm({
+        items: aiPreviewItems,
+        checklist_template: template,
+        trip_id: selectedTripId || undefined,
+      })
+      message.success(`成功导入 ${aiPreviewItems.length} 个物品`)
+      setAiPreviewOpen(false)
+      setAiPreviewItems([])
+      loadItems()
+    } catch (err: any) {
+      message.error(err.response?.data?.detail || '导入失败')
+    } finally {
+      setAiImportLoading(false)
+    }
   }
 
   const handleRenameCategory = async (oldCat: string) => {
@@ -522,6 +566,21 @@ export default function ChecklistPage() {
           </Form.Item>
           <Button type="primary" htmlType="submit" block>添加</Button>
         </Form>
+        <div style={{ marginTop: 16, borderTop: '1px dashed #d9d9d9', paddingTop: 16, textAlign: 'center' }}>
+          <Upload
+            accept=".xlsx,.xls"
+            showUploadList={false}
+            beforeUpload={handleAiImportUpload}
+          >
+            <Button
+              icon={<UploadOutlined />}
+              loading={aiImportLoading}
+              style={{ borderStyle: 'dashed' }}
+            >
+              AI 识别导入 (Excel)
+            </Button>
+          </Upload>
+        </div>
         </div>
       </Modal>
 
@@ -562,6 +621,75 @@ export default function ChecklistPage() {
           <Button type="primary" htmlType="submit" block>保存</Button>
         </Form>
         </div>
+      </Modal>
+
+      {/* AI 导入预览弹窗 */}
+      <Modal
+        title="AI 识别预览"
+        open={aiPreviewOpen}
+        onCancel={() => { setAiPreviewOpen(false); setAiPreviewItems([]) }}
+        width={700}
+        footer={[
+          <Button key="cancel" onClick={() => { setAiPreviewOpen(false); setAiPreviewItems([]) }}>取消</Button>,
+          <Button
+            key="confirm"
+            type="primary"
+            loading={aiImportLoading}
+            onClick={handleAiImportConfirm}
+            disabled={aiPreviewItems.length === 0}
+          >
+            确认导入 ({aiPreviewItems.length} 件)
+          </Button>,
+        ]}
+      >
+        <p style={{ color: '#64748b', marginBottom: 12 }}>
+          识别到 {aiPreviewItems.length} 个物品，可编辑后确认导入。当前模板：<Tag>{template}</Tag>
+          {selectedTripId && <><Tag color="blue">行程 ID: {selectedTripId}</Tag></>}
+        </p>
+        <Table
+          dataSource={aiPreviewItems}
+          rowKey={(_, i) => String(i)}
+          pagination={false}
+          size="small"
+          scroll={{ y: 400 }}
+          columns={[
+            {
+              title: '物品名称',
+              dataIndex: 'name',
+              key: 'name',
+              render: (text: string, _: any, index: number) => (
+                <Input
+                  value={text}
+                  onChange={(e) => {
+                    const next = [...aiPreviewItems]
+                    next[index] = { ...next[index], name: e.target.value }
+                    setAiPreviewItems(next)
+                  }}
+                  size="small"
+                  style={{ border: 'none', background: 'transparent' }}
+                />
+              ),
+            },
+            {
+              title: '分类',
+              dataIndex: 'category',
+              key: 'category',
+              width: 140,
+              render: (text: string, _: any, index: number) => (
+                <Input
+                  value={text}
+                  onChange={(e) => {
+                    const next = [...aiPreviewItems]
+                    next[index] = { ...next[index], category: e.target.value }
+                    setAiPreviewItems(next)
+                  }}
+                  size="small"
+                  style={{ border: 'none', background: 'transparent' }}
+                />
+              ),
+            },
+          ]}
+        />
       </Modal>
     </div>
   )

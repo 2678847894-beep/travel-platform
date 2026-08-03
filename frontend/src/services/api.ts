@@ -71,6 +71,20 @@ export const deleteChecklistItem = (id: number) => api.delete(`/checklist/${id}`
 export const reorderChecklistItems = (items: { id: number; sort_order: number }[]) =>
   api.put('/checklist/reorder', { items })
 
+// Checklist AI Import
+export const aiImportPreview = (file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return api.post('/checklist/ai-import-preview', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+export const aiImportConfirm = (data: {
+  items: { name: string; category: string; extras: string }[]
+  checklist_template: string
+  trip_id?: number
+}) => api.post('/checklist/ai-import-confirm', data)
+
 // AI
 export const aiAsk = (question: string) => api.post('/ai/ask', { question })
 
