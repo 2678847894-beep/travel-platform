@@ -1,13 +1,139 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useLocation } from 'react-router-dom'
 import { Card, Button, Progress, Space, Input, Segmented, Modal, Form, message, Tag, Upload, Select } from 'antd'
-import { PlusOutlined, ReloadOutlined, FileTextOutlined, InboxOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
-import { getChecklistItems, createChecklistItem, updateChecklistItem, deleteChecklistItem } from '../services/api'
+import { PlusOutlined, ReloadOutlined, FileTextOutlined, InboxOutlined, HolderOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
+import { getChecklistItems, createChecklistItem, updateChecklistItem, deleteChecklistItem, reorderChecklistItems } from '../services/api'
 import { getTrips, createTrip, deleteTrip, getTripItems, toggleTripItem } from '../services/api'
 import { useAuthStore } from '../store/authStore'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  useSortable,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 const { Dragger } = Upload
 
+/* ── Draggable Card Wrapper ── */
+function SortableCard({ item, onToggle, onEdit, isAdmin }: {
+  item: any
+  onToggle: (id: number) => void
+  onEdit: (item: any) => void
+  isAdmin: boolean
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id })
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 999 : 'auto',
+    border: `1px solid ${item.is_prepared ? '#10b981' : '#e2e8f0'}`,
+    borderRadius: 10,
+    overflow: 'hidden',
+    background: item.is_prepared ? '#f0fdf4' : '#fff',
+    boxShadow: isDragging ? '0 8px 24px rgba(0,0,0,0.15)' : '0 1px 3px rgba(0,0,0,0.06)',
+  }
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {/* Drag Handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: 20,
+          cursor: 'grab',
+          background: '#f1f5f9',
+          borderBottom: '1px solid #e2e8f0',
+          color: '#94a3b8',
+          fontSize: 12,
+          userSelect: 'none',
+        }}
+        title="拖拽排序"
+      >
+        <HolderOutlined style={{ fontSize: 14 }} />
+      </div>
+
+      {/* 图片 */}
+      <div
+        onClick={() => onToggle(item.id)}
+        style={{
+          width: '100%', height: 110, background: '#f8fafc',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer',
+        }}>
+        {item.image_data ? (
+          <img src={item.image_data} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <div style={{ textAlign: 'center', color: '#cbd5e1' }}>
+            <FileTextOutlined style={{ fontSize: 28 }} />
+            <div style={{ fontSize: 11, marginTop: 4 }}>暂无图片</div>
+          </div>
+        )}
+      </div>
+
+      {/* 信息区 */}
+      <div style={{ padding: '8px 10px 10px' }}>
+        <div style={{
+          fontWeight: 600, fontSize: 13, marginBottom: 8,
+          textDecoration: item.is_prepared ? 'line-through' : 'none',
+          color: item.is_prepared ? '#94a3b8' : '#1e293b',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {item.name}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div
+            onClick={() => onToggle(item.id)}
+            style={{
+              width: 20, height: 20, borderRadius: '50%',
+              background: item.is_prepared ? '#10b981' : '#fff',
+              border: `2px solid ${item.is_prepared ? '#10b981' : '#d1d5db'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontSize: 11, fontWeight: 700, flexShrink: 0, cursor: 'pointer',
+            }}>
+            {item.is_prepared ? '✓' : ''}
+          </div>
+          <Input
+            size="small"
+            placeholder="数量"
+            style={{ width: 56, fontSize: 12 }}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <Button
+            type="text" size="small" icon={<EditOutlined />}
+            onClick={(e) => { e.stopPropagation(); onEdit(item) }}
+            style={{ color: '#94a3b8', padding: '0 4px', minWidth: 24 }}
+          />
+          <div style={{ flex: 1 }} />
+          {item.is_essential && <Tag color="red" style={{ margin: 0, fontSize: 10, lineHeight: '16px' }}>常备</Tag>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Main Page ── */
 export default function ChecklistPage() {
   const [searchParams] = useSearchParams()
   const location = useLocation()
@@ -30,6 +156,12 @@ export default function ChecklistPage() {
   const [previewUrl, setPreviewUrl] = useState('')
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'admin'
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
+  )
 
   useEffect(() => {
     const p = new URLSearchParams(location.search).get('template') || '香港差旅'
@@ -170,6 +302,32 @@ export default function ChecklistPage() {
     })
   }
 
+  // ── Drag-and-Drop Handler ──
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    // Find which category the items belong to
+    setItems((prev) => {
+      const oldIndex = prev.findIndex((i) => i.id === active.id)
+      const newIndex = prev.findIndex((i) => i.id === over.id)
+      if (oldIndex === -1 || newIndex === -1) return prev
+
+      const reordered = [...prev]
+      const [moved] = reordered.splice(oldIndex, 1)
+      reordered.splice(newIndex, 0, moved)
+
+      // Persist new sort_order to backend
+      const payload = reordered.map((item, idx) => ({
+        id: item.id,
+        sort_order: idx,
+      }))
+      reorderChecklistItems(payload).catch(() => {})
+
+      return reordered
+    })
+  }, [])
+
   const grouped: Record<string, any[]> = {}
   items.forEach((item) => {
     if (!grouped[item.category]) grouped[item.category] = []
@@ -251,112 +409,61 @@ export default function ChecklistPage() {
       ) : Object.keys(grouped).length === 0 ? (
         <Card><div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}>暂无物品</div></Card>
       ) : (
-        <div>
-          {Object.entries(grouped).map(([cat, catItems]) => {
-            const catPrepared = catItems.filter((i) => i.is_prepared).length
-            return (
-              <Card
-                key={cat}
-                title={
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    {editingCategory === cat ? (
-                      <Input
-                        size="small"
-                        value={categoryName}
-                        onChange={(e) => setCategoryName(e.target.value)}
-                        onPressEnter={() => handleRenameCategory(cat)}
-                        onBlur={() => handleRenameCategory(cat)}
-                        style={{ width: 160 }}
-                        autoFocus
-                      />
-                    ) : (
-                      <span
-                        onClick={() => { setEditingCategory(cat); setCategoryName(cat) }}
-                        style={{ fontWeight: 600, fontSize: 15, cursor: 'pointer' }}
-                      >
-                        {cat} <EditOutlined style={{ fontSize: 12, color: '#94a3b8', marginLeft: 6 }} />
-                      </span>
-                    )}
-                    <Tag>{catPrepared}/{catItems.length}</Tag>
-                  </div>
-                }
-                style={{ marginBottom: 16 }}
-              >
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 12 }}>
-                  {catItems.map((item) => (
-                    <div
-                      key={item.id}
-                      style={{
-                        border: `1px solid ${item.is_prepared ? '#10b981' : '#e2e8f0'}`,
-                        borderRadius: 10,
-                        overflow: 'hidden',
-                        background: item.is_prepared ? '#f0fdf4' : '#fff',
-                        transition: 'all 0.2s',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                      }}
-                    >
-                      {/* 图片 */}
-                      <div
-                        onClick={() => handleToggle(item.id)}
-                        style={{
-                          width: '100%', height: 110, background: '#f8fafc',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer',
-                        }}>
-                        {item.image_data ? (
-                          <img src={item.image_data} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          <div style={{ textAlign: 'center', color: '#cbd5e1' }}>
-                            <FileTextOutlined style={{ fontSize: 28 }} />
-                            <div style={{ fontSize: 11, marginTop: 4 }}>暂无图片</div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* 信息区 */}
-                      <div style={{ padding: '8px 10px 10px' }}>
-                        <div style={{
-                          fontWeight: 600, fontSize: 13, marginBottom: 8,
-                          textDecoration: item.is_prepared ? 'line-through' : 'none',
-                          color: item.is_prepared ? '#94a3b8' : '#1e293b',
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        }}>
-                          {item.name}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <div
-                            onClick={() => handleToggle(item.id)}
-                            style={{
-                              width: 20, height: 20, borderRadius: '50%',
-                              background: item.is_prepared ? '#10b981' : '#fff',
-                              border: `2px solid ${item.is_prepared ? '#10b981' : '#d1d5db'}`,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              color: '#fff', fontSize: 11, fontWeight: 700, flexShrink: 0, cursor: 'pointer',
-                            }}>
-                            {item.is_prepared ? '✓' : ''}
-                          </div>
-                          <Input
-                            size="small"
-                            placeholder="数量"
-                            style={{ width: 56, fontSize: 12 }}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <Button
-                            type="text" size="small" icon={<EditOutlined />}
-                            onClick={(e) => { e.stopPropagation(); handleEditItem(item) }}
-                            style={{ color: '#94a3b8', padding: '0 4px', minWidth: 24 }}
-                          />
-                          <div style={{ flex: 1 }} />
-                          {item.is_essential && <Tag color="red" style={{ margin: 0, fontSize: 10, lineHeight: '16px' }}>常备</Tag>}
-                        </div>
-                      </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <div>
+            {Object.entries(grouped).map(([cat, catItems]) => {
+              const catPrepared = catItems.filter((i) => i.is_prepared).length
+              const catIds = catItems.map((i) => i.id)
+              return (
+                <Card
+                  key={cat}
+                  title={
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      {editingCategory === cat ? (
+                        <Input
+                          size="small"
+                          value={categoryName}
+                          onChange={(e) => setCategoryName(e.target.value)}
+                          onPressEnter={() => handleRenameCategory(cat)}
+                          onBlur={() => handleRenameCategory(cat)}
+                          style={{ width: 160 }}
+                          autoFocus
+                        />
+                      ) : (
+                        <span
+                          onClick={() => { setEditingCategory(cat); setCategoryName(cat) }}
+                          style={{ fontWeight: 600, fontSize: 15, cursor: 'pointer' }}
+                        >
+                          {cat} <EditOutlined style={{ fontSize: 12, color: '#94a3b8', marginLeft: 6 }} />
+                        </span>
+                      )}
+                      <Tag>{catPrepared}/{catItems.length}</Tag>
                     </div>
-                  ))}
-                </div>
-              </Card>
-            )
-          })}
-        </div>
+                  }
+                  style={{ marginBottom: 16 }}
+                >
+                  <SortableContext items={catIds} strategy={rectSortingStrategy}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 12 }}>
+                      {catItems.map((item) => (
+                        <SortableCard
+                          key={item.id}
+                          item={item}
+                          onToggle={handleToggle}
+                          onEdit={handleEditItem}
+                          isAdmin={isAdmin}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </Card>
+              )
+            })}
+          </div>
+        </DndContext>
       )}
 
       {selectedTripId && (

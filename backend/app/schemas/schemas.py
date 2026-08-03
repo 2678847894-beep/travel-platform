@@ -133,6 +133,7 @@ class ChecklistItemOut(BaseModel):
     image_data: str = ""
     trip_date: Optional[date] = None
     related_doc_id: Optional[int] = None
+    sort_order: int = 0
     class Config:
         from_attributes = True
 
@@ -145,6 +146,7 @@ class ChecklistItemCreate(BaseModel):
     is_electronic: bool = False
     image_data: str = ""
     trip_date: Optional[date] = None
+    sort_order: int = 0
 
 
 # ── 行程 ──

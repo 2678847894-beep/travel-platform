@@ -82,6 +82,7 @@ class ChecklistItem(Base):
     image_data = Column(Text, default="")
     trip_date = Column(Date, nullable=True)
     related_doc_id = Column(Integer, ForeignKey("document_files.id"), nullable=True)
+    sort_order = Column(Integer, default=0)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

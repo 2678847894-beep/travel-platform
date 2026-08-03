@@ -51,7 +51,9 @@ def list_trip_items(
         raise HTTPException(status_code=404, detail="行程不存在")
 
     # Get all shared items for this template
-    items = db.query(ChecklistItem).filter(ChecklistItem.checklist_template == trip.template).all()
+    items = db.query(ChecklistItem).filter(
+        ChecklistItem.checklist_template == trip.template
+    ).order_by(ChecklistItem.sort_order.asc(), ChecklistItem.created_at.desc()).all()
 
     # Get trip-specific prepared statuses
     trip_item_map = {}
@@ -72,6 +74,7 @@ def list_trip_items(
             'image_data': item.image_data or '',
             'trip_date': item.trip_date,
             'related_doc_id': item.related_doc_id,
+            'sort_order': item.sort_order,
         }
         result.append(item_dict)
 

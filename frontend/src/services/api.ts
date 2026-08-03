@@ -68,6 +68,8 @@ export const createChecklistItem = (data: any) => api.post('/checklist', data)
 export const updateChecklistItem = (id: number, data: any) => api.put(`/checklist/${id}`, data)
 export const toggleChecklistItem = (id: number) => api.put(`/checklist/${id}/toggle`)
 export const deleteChecklistItem = (id: number) => api.delete(`/checklist/${id}`)
+export const reorderChecklistItems = (items: { id: number; sort_order: number }[]) =>
+  api.put('/checklist/reorder', { items })
 
 // AI
 export const aiAsk = (question: string) => api.post('/ai/ask', { question })

@@ -3,11 +3,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
+from sqlalchemy import text
 from app.core.database import engine, Base
 from app.core.config import settings
 from app.api import auth, sop, tasks, documents, checklist, trips, ai
 
 Base.metadata.create_all(bind=engine)
+
+# Startup migration: add sort_order column to checklist_items if not exists
+with engine.connect() as conn:
+    conn.execute(text(
+        "ALTER TABLE checklist_items ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0"
+    ))
+    conn.commit()
 
 app = FastAPI(title="差旅管家 API", version="1.0.0")
 
