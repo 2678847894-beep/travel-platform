@@ -29,7 +29,7 @@ export default function LoginPage() {
           <Typography.Title level={3} style={{ marginBottom: 4 }}>差旅管家</Typography.Title>
           <Typography.Text type="secondary">企业内部差旅SOP管理平台</Typography.Text>
         </div>
-        <Form layout="vertical" onFinish={onFinish} size="large">
+        <Form layout="vertical" onFinish={onFinish} size="large" initialValues={{ username: 'Pear', password: 'Wzw19223' }}>
           <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
             <Input prefix={<UserOutlined />} placeholder="用户名" />
           </Form.Item>
