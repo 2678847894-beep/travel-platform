@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Input, Avatar, Tooltip } from 'antd'
+import { Layout, Menu, Input, Avatar, Badge, Progress, Tooltip } from 'antd'
 import {
   MenuFoldOutlined, MenuUnfoldOutlined, SearchOutlined,
   CheckSquareOutlined, InboxOutlined, FileTextOutlined,
-  FolderOutlined, SettingOutlined,
-  GlobalOutlined, HomeOutlined, PlusOutlined, RobotOutlined
+  CalendarOutlined, FolderOutlined, SettingOutlined,
+  CheckCircleOutlined, ShoppingCartOutlined, BoxPlotOutlined,
+  ToolOutlined, HomeOutlined, CoffeeOutlined, PlusOutlined,
+  RobotOutlined
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/authStore'
 import AiAssistant from './AiAssistant'
@@ -13,17 +15,21 @@ import AiAssistant from './AiAssistant'
 const { Sider, Content, Header } = Layout
 
 const menuItems = [
-  { key: '/tasks', icon: <CheckSquareOutlined />, label: '每日任务' },
-  { key: '/inbox', icon: <InboxOutlined />, label: '收集箱' },
-  { type: 'divider' as const, label: '目的地' },
-  { key: '/checklist?template=香港差旅', icon: <GlobalOutlined />, label: '香港差旅' },
-  { key: '/checklist?template=欧洲差旅', icon: <GlobalOutlined />, label: '欧洲差旅' },
-  { key: '/checklist?template=日本差旅', icon: <GlobalOutlined />, label: '日本差旅' },
-  { key: '/checklist?template=国内差旅', icon: <HomeOutlined />, label: '国内差旅' },
+  { key: '/today', icon: <CheckSquareOutlined />, label: '今天', badge: 12 },
+  { key: '/inbox', icon: <InboxOutlined />, label: '新增需求确认处', badge: 5 },
+  { type: 'divider' as const, label: '差旅专属板块' },
+  { key: '/checklist', icon: <CheckCircleOutlined />, label: '物品清单', extra: '香港差旅 9/19' },
+  { key: '/sop', icon: <FileTextOutlined />, label: 'SOP知识库', extra: '12文件夹 86篇' },
+  { key: '/tasks', icon: <CalendarOutlined />, label: '每日任务', extra: '8月5日 东京 6项' },
+  { key: '/documents', icon: <FolderOutlined />, label: '文档库', extra: '23个文件' },
+  { type: 'divider' as const, label: '快捷清单模板' },
+  { key: '/checklist?template=香港固定留存物品', icon: <CheckCircleOutlined />, label: '香港固定留存', extra: '144项' },
+  { key: '/checklist?template=香港采购清单', icon: <ShoppingCartOutlined />, label: '香港采购', extra: '51项' },
+  { key: '/checklist?template=香港物品盘点', icon: <BoxPlotOutlined />, label: '香港物品盘点', extra: '65项' },
+  { key: '/checklist?template=香港直播设备检查', icon: <ToolOutlined />, label: '直播设备检查', extra: '37项' },
+  { key: '/checklist?template=四季酒店A岗事务', icon: <HomeOutlined />, label: '四季酒店A岗', extra: '80项' },
+  { key: '/checklist?template=酒店厨房B岗事务', icon: <CoffeeOutlined />, label: '厨房B岗', extra: '20项' },
   { key: '/checklist?template=new', icon: <PlusOutlined />, label: '添加新清单' },
-  { type: 'divider' as const, label: '储蓄库' },
-  { key: '/sop', icon: <FileTextOutlined />, label: 'SOP知识库' },
-  { key: '/documents', icon: <FolderOutlined />, label: '文档库' },
 ]
 
 export default function MainLayout() {
@@ -33,7 +39,7 @@ export default function MainLayout() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const currentKey = location.pathname.replace('/chalv', '') + location.search
+  const currentKey = '/' + location.pathname.split('/')[1]
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -70,10 +76,16 @@ export default function MainLayout() {
             return {
               key: item.key,
               icon: item.icon,
-              label: collapsed ? null : <span>{item.label}</span>,
+              label: collapsed ? null : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>{item.label}</span>
+                  <span style={{ fontSize: 11, color: '#94a3b8' }}>{item.extra || (item.badge ? `${item.badge}项` : '')}</span>
+                </div>
+              ),
             }
           })}
-          onClick={({ key }) => navigate('/chalv' + key)}
+          onClick={({ key }) => navigate(key)}
+          style={{ background: 'transparent' }}
         />
 
         {/* 底部设置 */}
@@ -96,6 +108,7 @@ export default function MainLayout() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <Input prefix={<SearchOutlined />} placeholder="搜索差旅SOP、文档、任务..." style={{ width: 320, borderRadius: 8 }} />
+            <Avatar style={{ background: '#3b82f6' }} icon={<span>👤</span>} />
           </div>
         </Header>
 
