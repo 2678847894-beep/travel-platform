@@ -14,16 +14,16 @@ const { Sider, Content, Header } = Layout
 
 const menuItems = [
   { key: '/tasks', icon: <CheckSquareOutlined />, label: '每日任务' },
-  { key: '/inbox', icon: <InboxOutlined />, label: '收集�? },
-  { type: 'divider' as const, label: '目的�? },
+  { key: '/inbox', icon: <InboxOutlined />, label: '新增需求确认处' },
+  { type: 'divider' as const, label: '目的地' },
   { key: '/checklist?template=香港差旅', icon: <GlobalOutlined />, label: '香港差旅' },
   { key: '/checklist?template=欧洲差旅', icon: <GlobalOutlined />, label: '欧洲差旅' },
   { key: '/checklist?template=日本差旅', icon: <GlobalOutlined />, label: '日本差旅' },
   { key: '/checklist?template=国内差旅', icon: <HomeOutlined />, label: '国内差旅' },
-  { key: '/checklist?template=new', icon: <PlusOutlined />, label: '添加新清�? },
-  { type: 'divider' as const, label: '储蓄�? },
-  { key: '/sop', icon: <FileTextOutlined />, label: 'SOP知识�? },
-  { key: '/documents', icon: <FolderOutlined />, label: '文档�? },
+  { key: '/checklist?template=new', icon: <PlusOutlined />, label: '添加新清单' },
+  { type: 'divider' as const, label: '储蓄库' },
+  { key: '/sop', icon: <FileTextOutlined />, label: 'SOP知识库' },
+  { key: '/documents', icon: <FolderOutlined />, label: '文档库' },
 ]
 
 export default function MainLayout() {
@@ -37,7 +37,7 @@ export default function MainLayout() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      {/* 侧边�?*/}
+      {/* 侧边栏 */}
       <Sider
         trigger={null}
         collapsible
@@ -45,13 +45,13 @@ export default function MainLayout() {
         width={260}
         style={{ background: '#1e293b', overflow: 'auto', height: '100vh', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}
       >
-        {/* 用户�?*/}
+        {/* 用户区 */}
         <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Avatar style={{ background: '#3b82f6' }} icon={<span>👤</span>} />
             {!collapsed && <span style={{ color: '#fff', fontWeight: 600 }}>{user?.display_name || '用户'}</span>}
           </div>
-          {!collapsed && <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 4 }}>{user?.role === 'admin' ? '管理�? : '员工'}</div>}
+          {!collapsed && <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 4 }}>{user?.role === 'admin' ? '管理员' : '员工'}</div>}
         </div>
 
         {/* 导航菜单 */}
@@ -84,9 +84,9 @@ export default function MainLayout() {
         </div>
       </Sider>
 
-      {/* 主内�?*/}
+      {/* 主内容 */}
       <Layout style={{ marginLeft: collapsed ? 80 : 260, transition: 'margin-left 0.2s' }}>
-        {/* 顶部�?*/}
+        {/* 顶部栏 */}
         <Header style={{ background: '#fff', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', height: 56, position: 'sticky', top: 0, zIndex: 5 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <span onClick={() => setCollapsed(!collapsed)} style={{ cursor: 'pointer', fontSize: 18 }}>
@@ -95,11 +95,11 @@ export default function MainLayout() {
             <span style={{ fontWeight: 700, fontSize: 18, color: '#1e293b' }}>差旅管家</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <Input prefix={<SearchOutlined />} placeholder="搜索差旅SOP、文档、任�?.." style={{ width: 320, borderRadius: 8 }} />
+            <Input prefix={<SearchOutlined />} placeholder="搜索差旅SOP、文档、任务..." style={{ width: 320, borderRadius: 8 }} />
           </div>
         </Header>
 
-        {/* 内容�?*/}
+        {/* 内容区 */}
         <Content style={{ padding: 24, minHeight: 'calc(100vh - 56px)', background: '#f8fafc' }}>
           <Outlet />
         </Content>
