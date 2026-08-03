@@ -184,7 +184,7 @@ export default function ChecklistPage() {
   const loadItems = async () => {
     if (!selectedTripId) { setItems([]); return }
     try {
-      const filterMap: Record<string, string> = { '已准备': 'prepared', '未准备': 'unprepared', '常备': 'essential', '全部': 'all' }
+      const filterMap: Record<string, string> = { '已准备': 'prepared', '未准备': 'unprepared', '常备': 'essential', '全部': 'all', '其他': 'all' }
       const res = await getTripItems(selectedTripId, filterMap[filterType] || 'all')
       setItems(res.data)
     } catch { setItems([]) }
@@ -392,7 +392,7 @@ export default function ChecklistPage() {
         {selectedTripId && (
           <div style={{ marginTop: 12 }}>
             <Segmented
-              options={template === '香港差旅' ? ['全部', '已准备', '未准备', '常备'] : ['全部', '已准备', '未准备']}
+              options={template === '香港差旅' ? ['全部', '已准备', '未准备', '常备', '其他'] : ['全部', '已准备', '未准备', '其他']}
               value={filterType}
               onChange={(v) => setFilterType(v as string)}
             />
