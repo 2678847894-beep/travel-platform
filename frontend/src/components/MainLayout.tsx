@@ -85,7 +85,6 @@ export default function MainLayout() {
             }
           })}
           onClick={({ key }) => navigate(key)}
-          style={{ background: 'transparent' }}
         />
 
         {/* 底部设置 */}
