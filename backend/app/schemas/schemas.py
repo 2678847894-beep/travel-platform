@@ -130,6 +130,7 @@ class ChecklistItemOut(BaseModel):
     is_essential: bool = False
     is_international: bool = False
     is_electronic: bool = False
+    pool: str = "未准备"
     image_data: str = ""
     trip_date: Optional[date] = None
     related_doc_id: Optional[int] = None
@@ -144,6 +145,7 @@ class ChecklistItemCreate(BaseModel):
     is_essential: bool = False
     is_international: bool = False
     is_electronic: bool = False
+    pool: str = "未准备"
     image_data: str = ""
     trip_date: Optional[date] = None
     sort_order: int = 0

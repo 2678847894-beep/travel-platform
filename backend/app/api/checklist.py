@@ -20,10 +20,12 @@ class ReorderRequest(BaseModel):
 
 
 @router.get('', response_model=List[ChecklistItemOut])
-def list_items(template: str = 'default', filter_type: str = 'all', trip_date: str = None, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def list_items(template: str = 'default', filter_type: str = 'all', trip_date: str = None, pool: str = None, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
     q = db.query(ChecklistItem).filter(ChecklistItem.checklist_template == template)
     if trip_date:
         q = q.filter(ChecklistItem.trip_date == trip_date)
+    if pool:
+        q = q.filter(ChecklistItem.pool == pool)
     if filter_type == 'prepared':
         q = q.filter(ChecklistItem.is_prepared == True)
     elif filter_type == 'unprepared':

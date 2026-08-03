@@ -79,6 +79,7 @@ class ChecklistItem(Base):
     is_essential = Column(Boolean, default=False)
     is_international = Column(Boolean, default=False)
     is_electronic = Column(Boolean, default=False)
+    pool = Column(String(20), default="未准备")
     image_data = Column(Text, default="")
     trip_date = Column(Date, nullable=True)
     related_doc_id = Column(Integer, ForeignKey("document_files.id"), nullable=True)

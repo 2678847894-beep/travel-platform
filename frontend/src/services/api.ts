@@ -79,8 +79,8 @@ export const getTrips = (template?: string) =>
   api.get('/trips', { params: { template } })
 export const createTrip = (data: any) => api.post('/trips', data)
 export const deleteTrip = (id: number) => api.delete(`/trips/${id}`)
-export const getTripItems = (tripId: number, filterType = 'all') =>
-  api.get(`/trips/${tripId}/items`, { params: { filter_type: filterType } })
+export const getTripItems = (tripId: number, filterType = 'all', pool?: string) =>
+  api.get(`/trips/${tripId}/items`, { params: { filter_type: filterType, pool } })
 export const toggleTripItem = (tripId: number, itemId: number) =>
   api.post(`/trips/${tripId}/items/${itemId}/toggle`)
 

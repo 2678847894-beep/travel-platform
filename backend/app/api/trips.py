@@ -43,6 +43,7 @@ def list_trip_items(
     trip_id: int,
     filter_type: str = 'all',
     filter_text: str = '',
+    pool: str = None,
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user)
 ):
@@ -71,6 +72,7 @@ def list_trip_items(
             'is_essential': item.is_essential,
             'is_international': item.is_international,
             'is_electronic': item.is_electronic,
+            'pool': item.pool or '未准备',
             'image_data': item.image_data or '',
             'trip_date': item.trip_date,
             'related_doc_id': item.related_doc_id,
@@ -79,6 +81,8 @@ def list_trip_items(
         result.append(item_dict)
 
     # Apply filters
+    if pool:
+        result = [r for r in result if r['pool'] == pool]
     if filter_type == 'prepared':
         result = [r for r in result if r['is_prepared']]
     elif filter_type == 'unprepared':

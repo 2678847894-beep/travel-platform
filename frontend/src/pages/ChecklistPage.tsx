@@ -127,6 +127,7 @@ function SortableCard({ item, onToggle, onEdit, isAdmin }: {
           />
           <div style={{ flex: 1 }} />
           {item.is_essential && <Tag color="red" style={{ margin: 0, fontSize: 10, lineHeight: '16px' }}>常备</Tag>}
+          {item.pool === '其他' && <Tag color="purple" style={{ margin: 0, fontSize: 10, lineHeight: '16px' }}>其他</Tag>}
         </div>
       </div>
     </div>
@@ -184,8 +185,10 @@ export default function ChecklistPage() {
   const loadItems = async () => {
     if (!selectedTripId) { setItems([]); return }
     try {
-      const filterMap: Record<string, string> = { '已准备': 'prepared', '未准备': 'unprepared', '常备': 'essential', '全部': 'all', '其他': 'all' }
-      const res = await getTripItems(selectedTripId, filterMap[filterType] || 'all')
+      const filterMap: Record<string, string> = { '已准备': 'prepared', '未准备': 'unprepared', '常备': 'essential', '全部': 'all' }
+      const poolParam = filterType === '其他' ? '其他' : undefined
+      const filterParam = filterType === '其他' ? 'all' : (filterMap[filterType] || 'all')
+      const res = await getTripItems(selectedTripId, filterParam, poolParam)
       setItems(res.data)
     } catch { setItems([]) }
   }
@@ -495,6 +498,9 @@ export default function ChecklistPage() {
           <Form.Item name="category" label="分类" rules={[{ required: true }]}>
             <Input placeholder="例如: 证件票据类" />
           </Form.Item>
+          <Form.Item name="pool" label="所属池" initialValue="未准备">
+            <Segmented options={['未准备', '其他']} />
+          </Form.Item>
           <Form.Item label="图片">
             <Dragger accept="image/*" showUploadList={false} beforeUpload={handleImageUpload}
               style={{ padding: previewUrl ? 0 : undefined }}>
@@ -522,12 +528,15 @@ export default function ChecklistPage() {
       {/* 编辑物品弹窗 */}
       <Modal title="编辑物品" open={editModalOpen} onCancel={() => { setEditModalOpen(false); setEditItem(null); setImageBase64(''); setPreviewUrl('') }} footer={null}>
         <div onPaste={handlePaste} tabIndex={-1}>
-        <Form onFinish={handleUpdateItem} layout="vertical" initialValues={editItem ? { name: editItem.name, category: editItem.category, is_essential: editItem.is_essential } : {}}>
+        <Form onFinish={handleUpdateItem} layout="vertical" initialValues={editItem ? { name: editItem.name, category: editItem.category, is_essential: editItem.is_essential, pool: editItem.pool || '未准备' } : {}}>
           <Form.Item name="name" label="物品名称" rules={[{ required: true }]}>
             <Input placeholder="例如: 护照" />
           </Form.Item>
           <Form.Item name="category" label="分类" rules={[{ required: true }]}>
             <Input placeholder="例如: 证件票据类" />
+          </Form.Item>
+          <Form.Item name="pool" label="所属池">
+            <Segmented options={['未准备', '其他']} />
           </Form.Item>
           <Form.Item name="is_essential" valuePropName="checked">
             <input type="checkbox" /> 标记为常备
