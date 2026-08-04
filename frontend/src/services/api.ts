@@ -51,8 +51,18 @@ export const getSopStats = () => api.get('/sop/stats')
 export const getTasks = (taskDate?: string, tripFilter = '全部') =>
   api.get('/tasks', { params: { task_date: taskDate, trip_filter: tripFilter } })
 export const createTask = (data: any) => api.post('/tasks', data)
-export const toggleTask = (id: number) => api.put(`/tasks/${id}/toggle`)
+export const toggleTask = (id: number, toggleDate?: string) =>
+  api.post(`/tasks/${id}/toggle`, null, { params: { toggle_date: toggleDate } })
 export const deleteTask = (id: number) => api.delete(`/tasks/${id}`)
+export const aiImportTasksPreview = (file: File) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return api.post('/tasks/ai-import-preview', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+}
+export const aiImportTasksConfirm = (data: { tasks: any[] }) =>
+  api.post('/tasks/ai-import-confirm', data)
 
 // Documents
 export const getDocumentFiles = (folderName?: string, tripFilter = '全部') =>

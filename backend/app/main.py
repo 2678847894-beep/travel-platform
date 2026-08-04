@@ -18,6 +18,9 @@ with engine.connect() as conn:
     conn.execute(text(
         "ALTER TABLE checklist_items ADD COLUMN IF NOT EXISTS pool VARCHAR(20) DEFAULT '未准备'"
     ))
+    conn.execute(text(
+        "ALTER TABLE daily_tasks ADD COLUMN IF NOT EXISTS completed_date DATE"
+    ))
     conn.commit()
 
 app = FastAPI(title="差旅管家 API", version="1.0.0")

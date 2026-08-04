@@ -91,6 +91,8 @@ class TaskOut(BaseModel):
     description: str = ""
     trip_filter: str = "全部"
     is_completed: bool = False
+    is_overdue: bool = False
+    completed_date: Optional[date] = None
     created_at: Optional[datetime] = None
     class Config:
         from_attributes = True

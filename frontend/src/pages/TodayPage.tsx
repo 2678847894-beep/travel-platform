@@ -1,21 +1,35 @@
 import { useState, useEffect } from 'react'
-import { Card, Button, DatePicker, Modal, Form, Input, TimePicker, Select, Checkbox, Segmented, message, Tag, Empty } from 'antd'
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons'
-import dayjs from 'dayjs'
-import { getTasks, createTask, toggleTask, deleteTask } from '../services/api'
+import {
+  Card, Button, DatePicker, Modal, Form, Input, TimePicker, Select,
+  Checkbox, Segmented, message, Tag, Empty, Progress, Upload, Table,
+} from 'antd'
+import {
+  PlusOutlined, DeleteOutlined, UploadOutlined, RobotOutlined,
+} from '@ant-design/icons'
+import dayjs, { Dayjs } from 'dayjs'
+import {
+  getTasks, createTask, toggleTask, deleteTask,
+  aiImportTasksPreview, aiImportTasksConfirm,
+} from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
 const TRIP_GROUPS = ['香港差旅', '欧洲差旅', '日本差旅', '国内差旅']
 const TRIP_FILTERS = ['全部', '香港差旅', '欧洲差旅', '日本差旅', '国内差旅']
 
 export default function TodayPage() {
-  const [selectedDate, setSelectedDate] = useState(dayjs())
+  const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs())
   const [tripFilter, setTripFilter] = useState('全部')
   const [tasks, setTasks] = useState<any[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [form] = Form.useForm()
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'admin'
+
+  // AI import states
+  const [importing, setImporting] = useState(false)
+  const [previewData, setPreviewData] = useState<any[]>([])
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [confirming, setConfirming] = useState(false)
 
   const loadTasks = async () => {
     try {
@@ -26,10 +40,30 @@ export default function TodayPage() {
 
   useEffect(() => { loadTasks() }, [selectedDate, tripFilter])
 
+  // Auto-set end_date = task_date + 1 year
+  const handleTaskDateChange = (d: Dayjs | null) => {
+    if (d) {
+      const end = d.add(1, 'year')
+      form.setFieldsValue({ end_date: end })
+    }
+  }
+
   const handleToggle = async (id: number) => {
     try {
-      await toggleTask(id)
-      setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, is_completed: !t.is_completed } : t)))
+      const toggleDate = selectedDate.format('YYYY-MM-DD')
+      await toggleTask(id, toggleDate)
+      setTasks((prev) =>
+        prev.map((t) => {
+          if (t.id !== id) return t
+          const wasCompleted = t.completed_date === toggleDate
+          return {
+            ...t,
+            completed_date: wasCompleted ? null : toggleDate,
+            is_completed: !wasCompleted,
+            is_overdue: !wasCompleted ? false : (t.task_date < toggleDate && t.completed_date !== toggleDate),
+          }
+        })
+      )
     } catch { message.error('操作失败') }
   }
 
@@ -60,84 +94,233 @@ export default function TodayPage() {
     } catch { message.error('添加失败') }
   }
 
+  // AI Import handlers
+  const handleAiImport = async (file: File) => {
+    setImporting(true)
+    try {
+      const res = await aiImportTasksPreview(file)
+      const data = res.data?.preview || []
+      if (data.length === 0) {
+        message.warning('未能识别到任务')
+        return
+      }
+      setPreviewData(data.map((item: any, idx: number) => ({ ...item, key: idx })))
+      setPreviewOpen(true)
+    } catch {
+      message.error('导入失败，请检查文件格式')
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  const handlePreviewConfirm = async () => {
+    setConfirming(true)
+    try {
+      // Use the same task_date as selected date for all imported tasks
+      const dateStr = selectedDate.format('YYYY-MM-DD')
+      const ts = previewData.map((item: any) => ({
+        ...item,
+        task_date: dateStr,
+        end_date: dayjs(dateStr).add(1, 'year').format('YYYY-MM-DD'),
+      }))
+      await aiImportTasksConfirm({ tasks: ts })
+      message.success(`成功导入 ${ts.length} 个任务`)
+      setPreviewOpen(false)
+      setPreviewData([])
+      loadTasks()
+    } catch {
+      message.error('导入失败')
+    } finally {
+      setConfirming(false)
+    }
+  }
+
   const completedCount = tasks.filter((t) => t.is_completed).length
+  const totalCount = tasks.length
+  const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
+
+  const previewColumns = [
+    {
+      title: '任务名称',
+      dataIndex: 'title',
+      render: (_: string, record: any, idx: number) => (
+        <Input
+          value={record.title}
+          onChange={(e) => {
+            const next = [...previewData]
+            next[idx] = { ...next[idx], title: e.target.value }
+            setPreviewData(next)
+          }}
+        />
+      ),
+    },
+    {
+      title: '日期',
+      dataIndex: 'task_date',
+      width: 140,
+      render: (v: string) => v || selectedDate.format('YYYY-MM-DD'),
+    },
+    {
+      title: '备注',
+      dataIndex: 'description',
+      render: (_: string, record: any, idx: number) => (
+        <Input
+          value={record.description}
+          onChange={(e) => {
+            const next = [...previewData]
+            next[idx] = { ...next[idx], description: e.target.value }
+            setPreviewData(next)
+          }}
+        />
+      ),
+    },
+  ]
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto' }}>
+    <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      {/* Top Card */}
       <Card style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <h2 style={{ margin: 0, fontSize: 20 }}>每日任务</h2>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>每日任务</h2>
             <DatePicker value={selectedDate} onChange={(d) => setSelectedDate(d || dayjs())} />
-            {tasks.length > 0 && (
-              <Tag color="blue">{completedCount}/{tasks.length} 已完成</Tag>
-            )}
           </div>
           {isAdmin && (
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalOpen(true)}>
-              添加任务
-            </Button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => {
+                form.resetFields()
+                form.setFieldsValue({
+                  task_date: selectedDate,
+                  trip_filter: tripFilter !== '全部' ? tripFilter : undefined,
+                  end_date: selectedDate.add(1, 'year'),
+                })
+                setModalOpen(true)
+              }}>
+                添加任务
+              </Button>
+              <Upload
+                accept=".docx,.xlsx,.doc,.xls"
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  handleAiImport(file)
+                  return false
+                }}
+              >
+                <Button
+                  icon={<RobotOutlined />}
+                  loading={importing}
+                  style={{ borderStyle: 'dashed' }}
+                >
+                  AI 识别导入
+                </Button>
+              </Upload>
+            </div>
           )}
         </div>
-        <div style={{ marginTop: 12 }}>
-          <Segmented
-            options={TRIP_FILTERS}
-            value={tripFilter}
-            onChange={(v) => setTripFilter(v as string)}
-          />
-        </div>
+
+        {/* Progress Bar */}
+        {totalCount > 0 && (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13, color: '#64748b' }}>
+              <span>完成进度</span>
+              <span>{completedCount} / {totalCount} ({percent}%)</span>
+            </div>
+            <Progress percent={percent} showInfo={false} strokeColor="#1677ff" trailColor="#f0f0f0" />
+          </div>
+        )}
+
+        {/* Segmented Filter */}
+        <Segmented
+          options={TRIP_FILTERS}
+          value={tripFilter}
+          onChange={(v) => setTripFilter(v as string)}
+        />
       </Card>
 
+      {/* Task List */}
       {tasks.length === 0 ? (
         <Card>
           <Empty description={isAdmin ? '暂无任务，点击上方按钮添加' : '当天暂无任务'} />
         </Card>
       ) : (
-        tasks.map((task) => (
-          <Card key={task.id} style={{ marginBottom: 8, opacity: task.is_completed ? 0.6 : 1 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-              <Checkbox
-                checked={task.is_completed}
-                onChange={() => handleToggle(task.id)}
-                style={{ marginTop: 4 }}
-              />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: 15, textDecoration: task.is_completed ? 'line-through' : 'none' }}>
-                  {task.title}
+        tasks.map((task) => {
+          const isCompleted = task.is_completed
+          const isOverdue = task.is_overdue
+          return (
+            <Card
+              key={task.id}
+              style={{
+                marginBottom: 8,
+                opacity: isCompleted && !isOverdue ? 0.55 : 1,
+                ...(isOverdue && !isCompleted ? {
+                  borderColor: '#ff4d4f',
+                  backgroundColor: '#fff2f0',
+                } : {}),
+              }}
+              bodyStyle={{ padding: '12px 16px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <Checkbox
+                  checked={isCompleted}
+                  onChange={() => handleToggle(task.id)}
+                  style={{ marginTop: 4 }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontWeight: 600,
+                    fontSize: 15,
+                    textDecoration: isCompleted ? 'line-through' : 'none',
+                    color: isOverdue && !isCompleted ? '#ff4d4f' : 'inherit',
+                  }}>
+                    {task.title}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+                    {task.trip_filter && task.trip_filter !== '全部' && (
+                      <Tag color="blue">{task.trip_filter}</Tag>
+                    )}
+                    {task.task_time && (
+                      <Tag>{task.task_time}{task.end_time ? ` - ${task.end_time}` : ''}</Tag>
+                    )}
+                    {task.end_date && (
+                      <Tag color="purple">至 {dayjs(task.end_date).format('MM/DD')}</Tag>
+                    )}
+                    {task.location && <Tag color="orange">{task.location}</Tag>}
+                    {isOverdue && !isCompleted && (
+                      <Tag color="red">已过期</Tag>
+                    )}
+                  </div>
+                  {task.description && (
+                    <div style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>{task.description}</div>
+                  )}
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
-                  {task.trip_filter && task.trip_filter !== '全部' && (
-                    <Tag color="blue">{task.trip_filter}</Tag>
-                  )}
-                  {task.task_time && (
-                    <Tag>{task.task_time}{task.end_time ? ` - ${task.end_time}` : ''}</Tag>
-                  )}
-                  {task.end_date && (
-                    <Tag color="purple">至 {dayjs(task.end_date).format('MM/DD')}</Tag>
-                  )}
-                  {task.location && <Tag color="orange">{task.location}</Tag>}
-                </div>
-                {task.description && (
-                  <div style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>{task.description}</div>
+                {isAdmin && (
+                  <Button type="text" danger size="small" icon={<DeleteOutlined />}
+                    onClick={() => handleDelete(task.id)} />
                 )}
               </div>
-              {isAdmin && (
-                <Button type="text" danger size="small" icon={<DeleteOutlined />}
-                  onClick={() => handleDelete(task.id)} />
-              )}
-            </div>
-          </Card>
-        ))
+            </Card>
+          )
+        })
       )}
 
+      {/* Add Task Modal */}
       <Modal
         title="添加每日任务"
         open={modalOpen}
         onCancel={() => { setModalOpen(false); form.resetFields() }}
         footer={null}
-        width={520}
+        width={560}
       >
-        <Form form={form} onFinish={handleAdd} layout="vertical" initialValues={{ task_date: selectedDate, trip_filter: tripFilter !== '全部' ? tripFilter : undefined }}>
+        <Form
+          form={form}
+          onFinish={handleAdd}
+          layout="vertical"
+          initialValues={{
+            task_date: selectedDate,
+            trip_filter: tripFilter !== '全部' ? tripFilter : undefined,
+            end_date: selectedDate.add(1, 'year'),
+          }}
+        >
           <Form.Item name="title" label="任务名称" rules={[{ required: true, message: '请输入任务名称' }]}>
             <Input placeholder="例如：出发前往机场" />
           </Form.Item>
@@ -146,10 +329,10 @@ export default function TodayPage() {
           </Form.Item>
           <div style={{ display: 'flex', gap: 16 }}>
             <Form.Item name="task_date" label="开始日期" style={{ flex: 1 }} rules={[{ required: true }]}>
-              <DatePicker style={{ width: '100%' }} />
+              <DatePicker style={{ width: '100%' }} onChange={handleTaskDateChange} />
             </Form.Item>
             <Form.Item name="end_date" label="结束日期" style={{ flex: 1 }}>
-              <DatePicker style={{ width: '100%' }} placeholder="选填" />
+              <DatePicker style={{ width: '100%' }} placeholder="默认一年后" />
             </Form.Item>
           </div>
           <div style={{ display: 'flex', gap: 16 }}>
@@ -166,8 +349,49 @@ export default function TodayPage() {
           <Form.Item name="description" label="备注">
             <Input.TextArea rows={3} placeholder="选填" />
           </Form.Item>
+
+          {/* AI import inside modal */}
+          <Form.Item label="AI 识别导入">
+            <Upload
+              accept=".docx,.xlsx,.doc,.xls"
+              showUploadList={false}
+              beforeUpload={(file) => {
+                handleAiImport(file)
+                return false
+              }}
+            >
+              <Button icon={<RobotOutlined />} loading={importing} style={{ borderStyle: 'dashed' }} block>
+                从 Excel / Word 智能导入
+              </Button>
+            </Upload>
+          </Form.Item>
+
           <Button type="primary" htmlType="submit" block>添加</Button>
         </Form>
+      </Modal>
+
+      {/* AI Preview Modal */}
+      <Modal
+        title="AI 识别导入预览"
+        open={previewOpen}
+        onCancel={() => { setPreviewOpen(false); setPreviewData([]) }}
+        width={700}
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button onClick={() => { setPreviewOpen(false); setPreviewData([]) }}>取消</Button>
+            <Button type="primary" loading={confirming} onClick={handlePreviewConfirm}>
+              确认导入 ({previewData.length} 条)
+            </Button>
+          </div>
+        }
+      >
+        <Table
+          columns={previewColumns}
+          dataSource={previewData}
+          pagination={false}
+          size="small"
+          scroll={{ y: 400 }}
+        />
       </Modal>
     </div>
   )
