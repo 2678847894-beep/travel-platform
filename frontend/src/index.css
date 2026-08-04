@@ -122,7 +122,7 @@ body {
 
 .login-scenery {
   flex: 1;
-  background: linear-gradient(#87CEEB, #B3D9F5 22%, #D8EDFB 48%, #EFF7FD 70%, #FDF8F5);
+  background: linear-gradient(#C8E6C9, #E8F5E9 30%, #F1F8E9 50%, #F9FBE7 70%, #FDF8F5);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -180,13 +180,13 @@ body {
   height: 60px;
   border-radius: 50% 50% 45% 45%;
   background: repeating-linear-gradient(0deg,
-    #D4786E, #D4786E 9px,
-    #FFEDD5 9px, #FFEDD5 18px,
-    #B0BFA8 18px, #B0BFA8 27px,
-    #D4786E 27px, #D4786E 36px,
-    #FFEDD5 36px, #FFEDD5 45px,
-    #B0BFA8 45px, #B0BFA8 54px,
-    #D4786E 54px, #D4786E 60px);
+    #66BB6A, #66BB6A 9px,
+    #E8F5E9 9px, #E8F5E9 18px,
+    #A5D6A7 18px, #A5D6A7 27px,
+    #66BB6A 27px, #66BB6A 36px,
+    #E8F5E9 36px, #E8F5E9 45px,
+    #A5D6A7 45px, #A5D6A7 54px,
+    #66BB6A 54px, #66BB6A 60px);
   position: relative;
   box-shadow: inset -3px -1px 6px rgba(0,0,0,0.08);
 }
@@ -201,7 +201,7 @@ body {
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 7px solid #D4786E;
+  border-top: 7px solid #66BB6A;
 }
 
 .login-scenery .balloon-ropes {
@@ -314,7 +314,7 @@ body {
   width: 150%;
   left: -25%;
   height: 190px;
-  background: linear-gradient(#A3C9A8, #8BB595);
+  background: linear-gradient(#A5D6A7, #81C784);
   border-radius: 48% 52% 0 0;
   z-index: 2;
 }
@@ -325,7 +325,7 @@ body {
   width: 170%;
   left: -45%;
   height: 160px;
-  background: linear-gradient(#8BB595, #7BA587);
+  background: linear-gradient(#81C784, #66BB6A);
   border-radius: 55% 45% 0 0;
   z-index: 3;
 }
@@ -336,7 +336,7 @@ body {
   left: 0;
   right: 0;
   height: 36px;
-  background: linear-gradient(transparent 0%, rgba(168,192,160,0.35) 40%, rgba(168,192,160,0.65) 100%);
+  background: linear-gradient(transparent 0%, rgba(165,214,167,0.35) 40%, rgba(165,214,167,0.65) 100%);
   z-index: 4;
   pointer-events: none;
 }
@@ -349,7 +349,7 @@ body {
   right: 0;
   height: 65px;
   padding-bottom: 20px;
-  background: linear-gradient(#A8C0A0, #B5C8AD);
+  background: linear-gradient(#66BB6A, #81C784);
   z-index: 5;
 }
 
@@ -368,7 +368,7 @@ body {
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-bottom: 20px solid #6B9E78;
+  border-bottom: 20px solid #4CAF50;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.08));
 }
 
@@ -392,9 +392,9 @@ body {
 .login-scenery .scenery-brand h1 {
   font-size: 48px;
   font-weight: 800;
-  color: #D4786E;
+  color: #388E3C;
   margin: 0 0 8px;
-  text-shadow: 0 2px 10px rgba(212,120,110,0.25), 0 1px 3px rgba(255,255,255,0.8);
+  text-shadow: 0 2px 10px rgba(56,142,60,0.2), 0 1px 3px rgba(255,255,255,0.8);
 }
 
 .login-scenery .scenery-brand p {
@@ -413,13 +413,13 @@ body {
   .login-scenery .balloon-envelope {
     width: 36px; height: 46px;
     background: repeating-linear-gradient(0deg,
-      #D4786E, #D4786E 7px,
-      #FFEDD5 7px, #FFEDD5 14px,
-      #B0BFA8 14px, #B0BFA8 21px,
-      #D4786E 21px, #D4786E 28px,
-      #FFEDD5 28px, #FFEDD5 35px,
-      #B0BFA8 35px, #B0BFA8 42px,
-      #D4786E 42px, #D4786E 46px);
+      #66BB6A, #66BB6A 7px,
+      #E8F5E9 7px, #E8F5E9 14px,
+      #A5D6A7 14px, #A5D6A7 21px,
+      #66BB6A 21px, #66BB6A 28px,
+      #E8F5E9 28px, #E8F5E9 35px,
+      #A5D6A7 35px, #A5D6A7 42px,
+      #66BB6A 42px, #66BB6A 46px);
   }
   .login-scenery .sun { width: 40px; height: 40px; top: 5%; right: 8%; }
   .login-scenery .airplane { top: 14%; left: 8%; }
