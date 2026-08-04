@@ -17,6 +17,8 @@ export default function SopPage() {
   const user = useAuthStore((s) => s.user)
   const navigate = useNavigate()
 
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
   const isAdmin = user?.role === 'admin'
 
   const loadData = async () => {
