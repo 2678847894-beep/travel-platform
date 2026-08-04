@@ -25,28 +25,61 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' }}>
-      <Card style={{ width: 400, borderRadius: 16, boxShadow: '0 16px 48px rgba(0,0,0,0.3)' }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <Typography.Title level={3} style={{ marginBottom: 4 }}>差旅管家</Typography.Title>
-          <Typography.Text type="secondary">企业内部差旅SOP管理平台</Typography.Text>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: isMobile ? 'column' : 'row' }}>
+      {/* 左侧风景区 */}
+      <div className="login-scenery">
+        <div className="sun" />
+        <div className="hot-air-balloon">
+          <div className="balloon-envelope" />
+          <div className="balloon-ropes"><span /><span /></div>
+          <div className="balloon-basket" />
         </div>
-        <Form layout="vertical" onFinish={onFinish} size="large" initialValues={{ username: 'Pear', password: 'Wzw19223' }}>
-          <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
-            <Input prefix={<UserOutlined />} placeholder="用户名" />
-          </Form.Item>
-          <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
-            <Input.Password prefix={<LockOutlined />} placeholder="密码" />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading} block style={{ borderRadius: 8, height: 44 }}>
-              登录
-            </Button>
-          </Form.Item>
-        </Form>
-        <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+        <div className="airplane">
+          <div className="airplane-trail" />
+          <span className="airplane-icon">✈</span>
         </div>
-      </Card>
+        <div className="cloud cloud-1" />
+        <div className="cloud cloud-2" />
+        <div className="cloud cloud-3" />
+        <div className="cloud cloud-4" />
+        <div className="cloud cloud-5" />
+        <div className="mountain-layer-1" />
+        <div className="mountain-layer-2" />
+        <div className="mountain-blend" />
+        <div className="grass-field">
+          <div className="tree-simple" style={{ left: '15%' }} />
+          <div className="tree-simple" style={{ left: '38%' }} />
+          <div className="tree-simple" style={{ left: '62%' }} />
+          <div className="tree-simple" style={{ left: '85%' }} />
+        </div>
+        <div className="scenery-brand">
+          <h1>差旅管家</h1>
+          <p>让每次出行都有温度</p>
+        </div>
+      </div>
+
+      {/* 右侧登录表单 */}
+      <div style={{ flex: isMobile ? '0 0 auto' : '0 0 440px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff', padding: '40px 32px' }}>
+        <Card style={{ width: '100%', maxWidth: 400, borderRadius: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0' }}>
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <Typography.Title level={3} style={{ marginBottom: 4, color: '#D4786E' }}>欢迎回来</Typography.Title>
+            <Typography.Text type="secondary">登录你的差旅管家账户</Typography.Text>
+          </div>
+          <Form layout="vertical" onFinish={onFinish} size="large" initialValues={{ username: 'Pear', password: 'Wzw19223' }}>
+            <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
+              <Input prefix={<UserOutlined />} placeholder="用户名" />
+            </Form.Item>
+            <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
+              <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" loading={loading} block style={{ borderRadius: 8, height: 44, background: '#D4786E', borderColor: '#D4786E' }}>
+                登录
+              </Button>
+            </Form.Item>
+          </Form>
+        </Card>
+      </div>
     </div>
   )
 }

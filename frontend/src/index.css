@@ -117,3 +117,317 @@ body {
   background: linear-gradient(90deg, #3b82f6, #10b981);
   transition: width 0.3s ease;
 }
+
+/* ========== 登录页风景区 ========== */
+
+.login-scenery {
+  flex: 1;
+  background: linear-gradient(#87CEEB, #B3D9F5 22%, #D8EDFB 48%, #EFF7FD 70%, #FDF8F5);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 太阳 */
+.login-scenery .sun {
+  position: absolute;
+  top: 8%;
+  right: 10%;
+  width: 56px;
+  height: 56px;
+  background: radial-gradient(circle at 45% 40%, #FFF5E0, #FFD08C, #F0B860);
+  border-radius: 50%;
+  box-shadow: 0 0 40px rgba(255, 208, 140, 0.55), 0 0 80px rgba(255, 208, 140, 0.2);
+  animation: sunPulse 4s ease-in-out infinite;
+  will-change: transform, box-shadow;
+  z-index: 1;
+}
+
+@keyframes sunPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 40px rgba(255, 208, 140, 0.55), 0 0 80px rgba(255, 208, 140, 0.2);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 60px rgba(255, 208, 140, 0.75), 0 0 100px rgba(255, 208, 140, 0.3);
+  }
+}
+
+/* 热气球 */
+.login-scenery .hot-air-balloon {
+  position: absolute;
+  top: 16%;
+  right: 22%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: balloonFloat 6s ease-in-out infinite;
+  will-change: transform;
+  z-index: 2;
+}
+
+@keyframes balloonFloat {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50%      { transform: translateY(-14px) rotate(1deg); }
+}
+
+.login-scenery .balloon-envelope {
+  width: 48px;
+  height: 60px;
+  border-radius: 50% 50% 45% 45%;
+  background: repeating-linear-gradient(0deg,
+    #D4786E, #D4786E 9px,
+    #FFEDD5 9px, #FFEDD5 18px,
+    #B0BFA8 18px, #B0BFA8 27px,
+    #D4786E 27px, #D4786E 36px,
+    #FFEDD5 36px, #FFEDD5 45px,
+    #B0BFA8 45px, #B0BFA8 54px,
+    #D4786E 54px, #D4786E 60px);
+  position: relative;
+  box-shadow: inset -3px -1px 6px rgba(0,0,0,0.08);
+}
+
+.login-scenery .balloon-envelope::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid #D4786E;
+}
+
+.login-scenery .balloon-ropes {
+  display: flex;
+  gap: 10px;
+  margin-top: 0;
+}
+
+.login-scenery .balloon-ropes span {
+  width: 1.5px;
+  height: 13px;
+  background: #8B7355;
+  display: block;
+}
+
+.login-scenery .balloon-basket {
+  width: 20px;
+  height: 14px;
+  background: linear-gradient(#C4A882, #8B7355);
+  border-radius: 2px 2px 4px 4px;
+  margin-top: -1px;
+}
+
+/* 飞机 */
+.login-scenery .airplane {
+  position: absolute;
+  top: 20%;
+  left: 18%;
+  animation: airplaneFly 14s linear infinite;
+  will-change: transform, opacity;
+  z-index: 2;
+}
+
+.login-scenery .airplane-icon {
+  font-size: 22px;
+  transform: rotate(-15deg);
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  display: block;
+}
+
+.login-scenery .airplane-trail {
+  position: absolute;
+  top: 12px;
+  right: calc(100% - 4px);
+  width: 90px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), rgba(255,255,255,0.3));
+  border-radius: 2px;
+}
+
+@keyframes airplaneFly {
+  0%   { transform: translate(0); opacity: 0; }
+  8%   { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translate(260px, -70px); opacity: 0; }
+}
+
+/* 云朵 - 公共 */
+.login-scenery .cloud {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 50px;
+  will-change: transform;
+  z-index: 1;
+}
+
+.login-scenery .cloud::before,
+.login-scenery .cloud::after {
+  content: "";
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+}
+
+@keyframes cloudFloat {
+  0%, 100% { transform: translate(-16px); }
+  50%      { transform: translate(16px); }
+}
+
+/* cloud-1 */
+.login-scenery .cloud-1 { top: 9%; left: 4%; width: 105px; height: 36px; animation: cloudFloat 9s ease-in-out infinite; }
+.login-scenery .cloud-1::before { width: 42px; height: 42px; top: -20px; left: 14px; }
+.login-scenery .cloud-1::after  { width: 32px; height: 32px; top: -12px; left: 52px; }
+
+/* cloud-2 */
+.login-scenery .cloud-2 { top: 28%; right: 6%; width: 90px; height: 30px; animation: cloudFloat 11s ease-in-out 3s infinite; }
+.login-scenery .cloud-2::before { width: 36px; height: 36px; top: -18px; left: 10px; }
+.login-scenery .cloud-2::after  { width: 28px; height: 28px; top: -10px; left: 44px; }
+
+/* cloud-3 */
+.login-scenery .cloud-3 { top: 38%; left: 30%; width: 80px; height: 28px; opacity: 0.6; animation: cloudFloat 10s ease-in-out 5s infinite; }
+.login-scenery .cloud-3::before { width: 34px; height: 34px; top: -16px; left: 8px; }
+.login-scenery .cloud-3::after  { width: 26px; height: 26px; top: -9px; left: 40px; }
+
+/* cloud-4 */
+.login-scenery .cloud-4 { top: 6%; left: 55%; width: 75px; height: 26px; opacity: 0.55; animation: cloudFloat 8s ease-in-out 1s infinite; }
+.login-scenery .cloud-4::before { width: 32px; height: 32px; top: -15px; left: 10px; }
+.login-scenery .cloud-4::after  { width: 24px; height: 24px; top: -8px; left: 38px; }
+
+/* cloud-5 */
+.login-scenery .cloud-5 { top: 42%; left: 60%; width: 68px; height: 24px; opacity: 0.5; animation: cloudFloat 13s ease-in-out 6s infinite; }
+.login-scenery .cloud-5::before { width: 28px; height: 28px; top: -14px; left: 8px; }
+.login-scenery .cloud-5::after  { width: 22px; height: 22px; top: -7px; left: 34px; }
+
+/* 山脉 */
+.login-scenery .mountain-layer-1 {
+  position: absolute;
+  bottom: 15%;
+  width: 150%;
+  left: -25%;
+  height: 190px;
+  background: linear-gradient(#A3C9A8, #8BB595);
+  border-radius: 48% 52% 0 0;
+  z-index: 2;
+}
+
+.login-scenery .mountain-layer-2 {
+  position: absolute;
+  bottom: 5%;
+  width: 170%;
+  left: -45%;
+  height: 160px;
+  background: linear-gradient(#8BB595, #7BA587);
+  border-radius: 55% 45% 0 0;
+  z-index: 3;
+}
+
+.login-scenery .mountain-blend {
+  position: absolute;
+  bottom: 5%;
+  left: 0;
+  right: 0;
+  height: 36px;
+  background: linear-gradient(transparent 0%, rgba(168,192,160,0.35) 40%, rgba(168,192,160,0.65) 100%);
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* 草地与树 */
+.login-scenery .grass-field {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 65px;
+  padding-bottom: 20px;
+  background: linear-gradient(#A8C0A0, #B5C8AD);
+  z-index: 5;
+}
+
+.login-scenery .tree-simple {
+  position: absolute;
+  bottom: 24px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-scenery .tree-simple::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 20px solid #6B9E78;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.08));
+}
+
+.login-scenery .tree-simple::after {
+  content: "";
+  width: 3px;
+  height: 6px;
+  background: #8B7355;
+  border-radius: 1px;
+  margin-top: -1px;
+}
+
+/* 品牌文字 */
+.login-scenery .scenery-brand {
+  position: relative;
+  z-index: 7;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.login-scenery .scenery-brand h1 {
+  font-size: 48px;
+  font-weight: 800;
+  color: #D4786E;
+  margin: 0 0 8px;
+  text-shadow: 0 2px 10px rgba(212,120,110,0.25), 0 1px 3px rgba(255,255,255,0.8);
+}
+
+.login-scenery .scenery-brand p {
+  font-size: 16px;
+  color: #5C4F4A;
+  letter-spacing: 4px;
+  margin: 0;
+}
+
+/* 风景区响应式 */
+@media (max-width: 768px) {
+  .login-scenery { height: 220px; flex: 0 0 auto; }
+  .login-scenery .scenery-brand h1 { font-size: 32px; }
+  .login-scenery .scenery-brand p { font-size: 14px; letter-spacing: 2px; }
+  .login-scenery .hot-air-balloon { top: 10%; right: 18%; }
+  .login-scenery .balloon-envelope {
+    width: 36px; height: 46px;
+    background: repeating-linear-gradient(0deg,
+      #D4786E, #D4786E 7px,
+      #FFEDD5 7px, #FFEDD5 14px,
+      #B0BFA8 14px, #B0BFA8 21px,
+      #D4786E 21px, #D4786E 28px,
+      #FFEDD5 28px, #FFEDD5 35px,
+      #B0BFA8 35px, #B0BFA8 42px,
+      #D4786E 42px, #D4786E 46px);
+  }
+  .login-scenery .sun { width: 40px; height: 40px; top: 5%; right: 8%; }
+  .login-scenery .airplane { top: 14%; left: 8%; }
+  .login-scenery .airplane-icon { font-size: 16px; }
+  .login-scenery .airplane-trail { width: 50px; }
+  .login-scenery .mountain-layer-1 { height: 100px; bottom: 12%; }
+  .login-scenery .mountain-layer-2 { height: 85px; }
+  .login-scenery .grass-field { height: 52px; padding-bottom: 14px; }
+  .login-scenery .tree-simple { bottom: 18px; }
+  .login-scenery .tree-simple::before { border-bottom-width: 14px; border-left-width: 6px; border-right-width: 6px; }
+}
