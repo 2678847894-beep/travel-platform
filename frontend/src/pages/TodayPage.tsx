@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   Card, Button, DatePicker, Modal, Form, Input, TimePicker, Select,
-  Checkbox, Segmented, message, Tag, Empty, Progress, Upload, Table,
+  Checkbox, Segmented, message, Tag, Empty, Progress, Upload, Table, Grid,
 } from 'antd'
 import {
   PlusOutlined, DeleteOutlined, UploadOutlined, RobotOutlined,
@@ -24,6 +24,8 @@ export default function TodayPage() {
   const [form] = Form.useForm()
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'admin'
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
 
   // AI import states
   const [importing, setImporting] = useState(false)
@@ -230,11 +232,13 @@ export default function TodayPage() {
         )}
 
         {/* Segmented Filter */}
+        <div style={{ overflowX: isMobile ? 'auto' : 'visible' }}>
         <Segmented
           options={TRIP_FILTERS}
           value={tripFilter}
           onChange={(v) => setTripFilter(v as string)}
         />
+        </div>
       </Card>
 
       {/* Task List */}
@@ -309,7 +313,8 @@ export default function TodayPage() {
         open={modalOpen}
         onCancel={() => { setModalOpen(false); form.resetFields() }}
         footer={null}
-        width={560}
+        width={isMobile ? '100%' : 560}
+        style={isMobile ? { top: 0, margin: 0 } : {}}
       >
         <Form
           form={form}
@@ -390,7 +395,7 @@ export default function TodayPage() {
           dataSource={previewData}
           pagination={false}
           size="small"
-          scroll={{ y: 400 }}
+          scroll={{ y: 400, x: isMobile ? 'max-content' : undefined }}
         />
       </Modal>
     </div>

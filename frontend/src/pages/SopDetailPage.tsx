@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Card, Button, Progress, Space, Checkbox, Input, message, Modal, Tag, Descriptions } from 'antd'
+import { Card, Button, Progress, Space, Checkbox, Input, message, Modal, Tag, Descriptions, Grid } from 'antd'
 import { ArrowLeftOutlined, EditOutlined, ExportOutlined, ReloadOutlined, DeleteOutlined } from '@ant-design/icons'
 import { getSopDocument, updateSopDocument, toggleSopStep, deleteSopDocument } from '../services/api'
 import { useAuthStore } from '../store/authStore'
@@ -19,6 +19,8 @@ export default function SopDetailPage() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'admin'
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
   const [doc, setDoc] = useState<any>(null)
   const [steps, setSteps] = useState<Step[]>([])
   const [notes, setNotes] = useState('')

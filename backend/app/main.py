@@ -1,5 +1,6 @@
 # redeploy trigger
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
@@ -35,6 +36,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 移动端适配：上传文件大小限制 10MB
+@app.middleware("http")
+async def limit_upload_size(request: Request, call_next):
+    content_length = request.headers.get("content-length")
+    if content_length and int(content_length) > settings.MAX_UPLOAD_SIZE:
+        return JSONResponse(status_code=413, content={"detail": "文件大小超过限制（最大10MB）"})
+    return await call_next(request)
 
 app.include_router(auth.router)
 app.include_router(sop.router)

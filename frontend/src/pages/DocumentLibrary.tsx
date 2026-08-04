@@ -21,6 +21,8 @@ export default function DocumentLibrary() {
   const [search, setSearch] = useState('')
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'admin'
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
 
   const loadFiles = async () => {
     const res = await getDocumentFiles(selectedFolder, tripFilter)
@@ -57,7 +59,7 @@ export default function DocumentLibrary() {
       <Card style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <h2 style={{ margin: 0, fontSize: 20 }}>文档库</h2>
+            <h2 style={{ margin: 0, fontSize: isMobile ? 16 : 20 }}>文档库</h2>
             <Tag color="blue">{files.length}个文件</Tag>
           </div>
           <Space>
@@ -69,9 +71,9 @@ export default function DocumentLibrary() {
             )}
           </Space>
         </div>
-        <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <Segmented options={FOLDERS} value={selectedFolder} onChange={(v) => setSelectedFolder(v as string)} />
-          <Segmented options={['全部', '香港差旅', '日本差旅', '国内差旅']} value={tripFilter} onChange={(v) => setTripFilter(v as string)} />
+        <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', overflowX: isMobile ? 'auto' : 'visible' }}>
+          <Segmented options={FOLDERS} value={selectedFolder} onChange={(v) => setSelectedFolder(v as string)} style={isMobile ? { whiteSpace: 'nowrap' } : {}} />
+          <Segmented options={['全部', '香港差旅', '日本差旅', '国内差旅']} value={tripFilter} onChange={(v) => setTripFilter(v as string)} style={isMobile ? { whiteSpace: 'nowrap' } : {}} />
         </div>
       </Card>
 
@@ -82,7 +84,7 @@ export default function DocumentLibrary() {
             {search ? '未找到匹配文件' : '暂无文件，点击"上传"添加'}
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
             {filteredFiles.map((f) => (
               <div key={f.id} className="card" style={{ padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
                 {fileIcon(f.file_type)}

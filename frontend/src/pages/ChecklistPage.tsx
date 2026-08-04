@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useLocation } from 'react-router-dom'
-import { Card, Button, Progress, Space, Input, Segmented, Modal, Form, message, Tag, Upload, Select, Table } from 'antd'
+import { Card, Button, Progress, Space, Input, Segmented, Modal, Form, message, Tag, Upload, Select, Table, Grid } from 'antd'
 import { PlusOutlined, ReloadOutlined, FileTextOutlined, InboxOutlined, HolderOutlined, DeleteOutlined, EditOutlined, UploadOutlined } from '@ant-design/icons'
 import { getChecklistItems, createChecklistItem, updateChecklistItem, deleteChecklistItem, reorderChecklistItems, aiImportPreview, aiImportConfirm } from '../services/api'
 import { getTrips, createTrip, deleteTrip, getTripItems, toggleTripItem } from '../services/api'
@@ -157,6 +157,8 @@ export default function ChecklistPage() {
   const [previewUrl, setPreviewUrl] = useState('')
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'admin'
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
 
   // AI 导入
   const [aiPreviewOpen, setAiPreviewOpen] = useState(false)
@@ -437,7 +439,7 @@ export default function ChecklistPage() {
         )}
 
         {selectedTripId && (
-          <div style={{ marginTop: 12 }}>
+          <div style={{ marginTop: 12, overflowX: isMobile ? 'auto' : 'visible' }}>
             <Segmented
               options={template === '香港差旅' ? ['全部', '已准备', '未准备', '常备', '其他'] : ['全部', '已准备', '未准备', '其他']}
               value={filterType}
@@ -494,7 +496,7 @@ export default function ChecklistPage() {
                   style={{ marginBottom: 16 }}
                 >
                   <SortableContext items={catIds} strategy={rectSortingStrategy}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: 12 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(170px, 1fr))', gap: 12 }}>
                       {catItems.map((item) => (
                         <SortableCard
                           key={item.id}
@@ -628,7 +630,8 @@ export default function ChecklistPage() {
         title="AI 识别预览"
         open={aiPreviewOpen}
         onCancel={() => { setAiPreviewOpen(false); setAiPreviewItems([]) }}
-        width={700}
+        width={isMobile ? '100%' : 700}
+        style={isMobile ? { top: 0, margin: 0 } : {}}
         footer={[
           <Button key="cancel" onClick={() => { setAiPreviewOpen(false); setAiPreviewItems([]) }}>取消</Button>,
           <Button
@@ -651,7 +654,7 @@ export default function ChecklistPage() {
           rowKey={(_, i) => String(i)}
           pagination={false}
           size="small"
-          scroll={{ y: 400 }}
+          scroll={{ y: 400, x: isMobile ? 'max-content' : undefined }}
           columns={[
             {
               title: '物品名称',

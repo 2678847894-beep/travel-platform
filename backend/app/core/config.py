@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "travel-jwt-secret-key-2026-internal"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB，移动端上传图片
     UPLOAD_DIR: str = "uploads"
 
     class Config:

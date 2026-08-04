@@ -22,6 +22,8 @@ export default function AiAssistant({ onClose }: { onClose: () => void }) {
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
 
   const handleSend = async (text?: string) => {
     const question = text || input
@@ -40,7 +42,7 @@ export default function AiAssistant({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="ai-panel">
+    <div className="ai-panel" style={isMobile ? { position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh', zIndex: 1000, display: 'flex', flexDirection: 'column', background: '#fff' } : {}}>
       {/* 头部 */}
       <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', color: '#fff' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

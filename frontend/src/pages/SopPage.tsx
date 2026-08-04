@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Button, Input, Segmented, Progress, Modal, Form, message, Space, Tag, Tooltip, Upload, Select } from 'antd'
+import { Card, Button, Input, Segmented, Progress, Modal, Form, message, Space, Tag, Tooltip, Upload, Select, Grid } from 'antd'
 import { PlusOutlined, UploadOutlined, FolderAddOutlined, SearchOutlined, FileTextOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import { getSopFolders, getSopDocuments, createSopFolder, deleteSopFolder, createSopDocument, getSopStats } from '../services/api'
 import { useAuthStore } from '../store/authStore'
@@ -108,7 +108,7 @@ export default function SopPage() {
       </Card>
 
       {/* 文件夹列表 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(1, 1fr)' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
         {folders.map((folder) => (
           <Card
             key={folder.id}
