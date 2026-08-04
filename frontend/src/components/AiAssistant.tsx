@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Input, Tag, Divider } from 'antd'
+import { Button, Input, Tag, Divider, Grid } from 'antd'
 import { CloseOutlined, SendOutlined, RobotOutlined, UserOutlined } from '@ant-design/icons'
 import { aiAsk } from '../services/api'
 
