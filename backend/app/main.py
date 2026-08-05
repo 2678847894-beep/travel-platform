@@ -111,7 +111,7 @@ def root():
         <div class="links">
             <a href="/docs" class="btn-primary">Swagger API 文档</a>
             <a href="/redoc" class="btn-secondary">ReDoc 文档</a>
-            <a href="https://travel-platform-six.vercel.app" class="btn-outline">前往前端页面</a>
+            <a href="https://travel-platform-chalv.vercel.app" class="btn-outline">前往前端页面</a>
         </div>
         <p class="footer">Render · FastAPI · PostgreSQL</p>
     </div>
