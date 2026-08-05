@@ -45,9 +45,32 @@ def delete_folder(folder_id: int, db: Session = Depends(get_db), _: User = Depen
     folder = db.query(SopFolder).filter(SopFolder.id == folder_id).first()
     if not folder:
         raise HTTPException(status_code=404, detail='Not found')
+    # 级联删除该文件夹下的所有文档
+    db.query(SopDocument).filter(SopDocument.folder_id == folder_id).delete()
     db.delete(folder)
     db.commit()
     return {'ok': True}
+
+
+class SopBulkDelete(BaseModel):
+    folder_ids: List[int]
+
+
+@router.post('/folders/bulk-delete')
+def bulk_delete_folders(body: SopBulkDelete, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    """批量删除文件夹及其文档"""
+    folder_ids = body.folder_ids
+    deleted_folders = 0
+    deleted_docs = 0
+    for folder_id in folder_ids:
+        folder = db.query(SopFolder).filter(SopFolder.id == folder_id).first()
+        if folder:
+            doc_count = db.query(SopDocument).filter(SopDocument.folder_id == folder_id).delete()
+            deleted_docs += doc_count
+            db.delete(folder)
+            deleted_folders += 1
+    db.commit()
+    return {'deleted_folders': deleted_folders, 'deleted_documents': deleted_docs}
 
 @router.get('/documents', response_model=List[SopDocumentOut])
 def list_documents(folder_id: int = None, trip_filter: str = None, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
