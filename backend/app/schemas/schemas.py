@@ -39,7 +39,7 @@ class SopDocumentOut(BaseModel):
     steps: List[SopStep] = []
     responsible: str = ""
     execution_time: str = ""
-    trip_filter: str = "全部"
+    trip_filter: str = "香港差旅"
     notes: str = ""
     sort_order: int = 0
     created_at: Optional[datetime] = None
@@ -53,6 +53,7 @@ class SopFolderOut(BaseModel):
     name: str
     description: Optional[str] = ""
     sort_order: int = 0
+    trip_filter: str = "香港差旅"
     created_by: Optional[int] = None
     created_at: Optional[datetime] = None
     documents: List[SopDocumentOut] = []
@@ -76,7 +77,7 @@ class SopDocumentCreate(BaseModel):
     steps: Optional[List[SopStep]] = []
     responsible: str = ""
     execution_time: str = ""
-    trip_filter: str = "全部"
+    trip_filter: str = "香港差旅"
 
 
 # ── 每日任务 ──

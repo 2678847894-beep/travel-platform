@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+from pydantic import BaseModel
 from app.core.database import get_db
 from app.core.auth import get_current_user, require_admin
 from app.models.user import User
@@ -9,9 +10,44 @@ from app.schemas.schemas import SopFolderOut, SopDocumentOut, SopDocumentCreate,
 
 router = APIRouter(prefix='/api/sop', tags=['SOP'])
 
+
+class SopFolderCreate(BaseModel):
+    name: str
+    icon: str = "📁"
+    trip_filter: str = "香港差旅"
+    order_index: int = 0
+
+
 @router.get('/folders', response_model=List[SopFolderOut])
-def list_folders(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
-    return db.query(SopFolder).order_by(SopFolder.sort_order).all()
+def list_folders(trip_filter: str = None, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+    q = db.query(SopFolder)
+    if trip_filter and trip_filter != '全部':
+        q = q.filter(SopFolder.trip_filter == trip_filter)
+    return q.order_by(SopFolder.sort_order).all()
+
+
+@router.post('/folders', response_model=SopFolderOut)
+def create_folder(body: SopFolderCreate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    folder = SopFolder(
+        name=body.name,
+        description="",
+        sort_order=body.order_index,
+        trip_filter=body.trip_filter,
+    )
+    db.add(folder)
+    db.commit()
+    db.refresh(folder)
+    return folder
+
+
+@router.delete('/folders/{folder_id}')
+def delete_folder(folder_id: int, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    folder = db.query(SopFolder).filter(SopFolder.id == folder_id).first()
+    if not folder:
+        raise HTTPException(status_code=404, detail='Not found')
+    db.delete(folder)
+    db.commit()
+    return {'ok': True}
 
 @router.get('/documents', response_model=List[SopDocumentOut])
 def list_documents(folder_id: int = None, trip_filter: str = None, db: Session = Depends(get_db), _: User = Depends(get_current_user)):

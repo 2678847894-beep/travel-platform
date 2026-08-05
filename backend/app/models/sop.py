@@ -11,6 +11,7 @@ class SopFolder(Base):
     name = Column(String(100), nullable=False)
     description = Column(Text, default="")
     sort_order = Column(Integer, default=0)
+    trip_filter = Column(String(50), default="香港差旅")
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -27,7 +28,7 @@ class SopDocument(Base):
     steps = Column(JSON, default=[])
     responsible = Column(String(100), default="")
     execution_time = Column(String(100), default="")
-    trip_filter = Column(String(50), default="全部")
+    trip_filter = Column(String(50), default="香港差旅")
     notes = Column(Text, default="")
     sort_order = Column(Integer, default=0)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)

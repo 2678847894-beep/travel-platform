@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input, Segmented, Progress, Modal, Form, message, Space, Tag, Tooltip, Upload, Select, Grid } from 'antd'
-import { PlusOutlined, UploadOutlined, FolderAddOutlined, SearchOutlined, FileTextOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
-import { getSopFolders, getSopDocuments, createSopFolder, deleteSopFolder, createSopDocument, getSopStats } from '../services/api'
+import { PlusOutlined, UploadOutlined, FolderAddOutlined, SearchOutlined, FileTextOutlined, DeleteOutlined, EditOutlined, ImportOutlined } from '@ant-design/icons'
+import { getSopFolders, getSopDocuments, createSopFolder, deleteSopFolder, createSopDocument } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
 export default function SopPage() {
   const [folders, setFolders] = useState<any[]>([])
   const [documents, setDocuments] = useState<any[]>([])
-  const [tripFilter, setTripFilter] = useState('全部')
-  const [stats, setStats] = useState({ total_completed: 0, total_items: 0, percentage: 0 })
+  const [tripFilter, setTripFilter] = useState('香港差旅')
   const [folderModal, setFolderModal] = useState(false)
   const [docModal, setDocModal] = useState(false)
   const [selectedFolder, setSelectedFolder] = useState<number | null>(null)
@@ -22,14 +21,12 @@ export default function SopPage() {
   const isAdmin = user?.role === 'admin'
 
   const loadData = async () => {
-    const [fRes, dRes, sRes] = await Promise.all([
+    const [fRes, dRes] = await Promise.all([
       getSopFolders(tripFilter),
       getSopDocuments(undefined, tripFilter),
-      getSopStats(),
     ])
     setFolders(fRes.data)
     setDocuments(dRes.data)
-    setStats(sRes.data)
   }
 
   useEffect(() => { loadData() }, [tripFilter])
@@ -86,6 +83,30 @@ export default function SopPage() {
             {isAdmin && (
               <>
                 <Button icon={<FolderAddOutlined />} onClick={() => setFolderModal(true)}>新建文件夹</Button>
+                <Upload
+                  accept=".txt,.md,.json,.csv"
+                  showUploadList={false}
+                  beforeUpload={(file) => {
+                    const reader = new FileReader()
+                    reader.onload = async (e) => {
+                      const content = e.target?.result as string
+                      await createSopDocument({
+                        folder_id: selectedFolder || folders[0]?.id,
+                        title: file.name.replace(/\.[^/.]+$/, ''),
+                        description: content.slice(0, 500),
+                        trip_filter: tripFilter,
+                        steps: [],
+                        folder_name: selectedFolder ? folders.find((f) => f.id === selectedFolder)?.name || '' : folders[0]?.name || '',
+                      })
+                      message.success('文档导入成功')
+                      loadData()
+                    }
+                    reader.readAsText(file)
+                    return false
+                  }}
+                >
+                  <Button icon={<ImportOutlined />}>导入文档</Button>
+                </Upload>
                 <Button type="primary" icon={<PlusOutlined />} onClick={() => setDocModal(true)}>新建文档</Button>
               </>
             )}
@@ -93,20 +114,11 @@ export default function SopPage() {
         </div>
         <div style={{ marginTop: 12 }}>
           <Segmented
-            options={['全部', '香港', '日本', '欧洲', '国内']}
+            options={['香港差旅', '欧洲差旅', '日本差旅', '国内差旅']}
             value={tripFilter}
             onChange={(v) => { setTripFilter(v as string); setSelectedFolder(null) }}
           />
         </div>
-      </Card>
-
-      {/* 进度条 */}
-      <Card style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ fontSize: 14, color: '#64748b' }}>全局进度</span>
-          <span style={{ fontWeight: 600 }}>{stats.total_completed} / {stats.total_items} 项 ({stats.percentage}%)</span>
-        </div>
-        <Progress percent={stats.percentage} strokeColor={{ from: '#3b82f6', to: '#10b981' }} showInfo={false} />
       </Card>
 
       {/* 文件夹列表 */}

@@ -2,27 +2,24 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Input, Segmented, Progress, Tag } from 'antd'
 import { SearchOutlined, FileTextOutlined } from '@ant-design/icons'
-import { getSopFolders, getSopDocuments, getSopStats } from '../services/api'
+import { getSopFolders, getSopDocuments } from '../services/api'
 
 export default function PublicSopPage() {
   const [folders, setFolders] = useState<any[]>([])
   const [documents, setDocuments] = useState<any[]>([])
-  const [tripFilter, setTripFilter] = useState('全部')
-  const [stats, setStats] = useState({ total_completed: 0, total_items: 0, percentage: 0 })
+  const [tripFilter, setTripFilter] = useState('香港差旅')
   const [selectedFolder, setSelectedFolder] = useState<number | null>(null)
   const [search, setSearch] = useState('')
   const navigate = useNavigate()
 
   const loadData = async () => {
     try {
-      const [fRes, dRes, sRes] = await Promise.all([
+      const [fRes, dRes] = await Promise.all([
         getSopFolders(tripFilter),
         getSopDocuments(undefined, tripFilter),
-        getSopStats(),
       ])
       setFolders(fRes.data)
       setDocuments(dRes.data)
-      setStats(sRes.data)
     } catch { /* silently handle auth errors for public view */ }
   }
 
@@ -47,19 +44,11 @@ export default function PublicSopPage() {
         </div>
         <div style={{ marginTop: 12 }}>
           <Segmented
-            options={['全部', '香港', '日本', '欧洲', '国内']}
+            options={['香港差旅', '欧洲差旅', '日本差旅', '国内差旅']}
             value={tripFilter}
             onChange={(v) => { setTripFilter(v as string); setSelectedFolder(null) }}
           />
         </div>
-      </Card>
-
-      <Card style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span style={{ fontSize: 14, color: '#64748b' }}>全局进度</span>
-          <span style={{ fontWeight: 600 }}>{stats.total_completed} / {stats.total_items} 项 ({stats.percentage}%)</span>
-        </div>
-        <Progress percent={stats.percentage} strokeColor={{ from: '#3b82f6', to: '#10b981' }} showInfo={false} />
       </Card>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>

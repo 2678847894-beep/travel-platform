@@ -105,3 +105,9 @@ INSERT INTO public.sop_folders VALUES (7, '7-售后&复盘', '售后处理与数
 SELECT setval('public.users_id_seq', 2, true);
 SELECT setval('public.sop_folders_id_seq', 7, true);
 
+-- Migration: add trip_filter column to sop_folders
+ALTER TABLE public.sop_folders ADD COLUMN IF NOT EXISTS trip_filter VARCHAR(50) DEFAULT '香港差旅';
+
+-- Migration: add trip_filter column to sop_documents (if not exists)
+ALTER TABLE public.sop_documents ADD COLUMN IF NOT EXISTS trip_filter VARCHAR(50) DEFAULT '香港差旅';
+
