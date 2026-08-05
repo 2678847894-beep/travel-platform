@@ -63,13 +63,12 @@ function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logo
         className="sidebar-menu"
         mode="inline"
         selectedKeys={[currentKey]}
-        style={{ background: 'transparent', borderRight: 0, color: '#f8fafc', marginTop: 8 }}
-        theme="dark"
+        style={{ background: 'transparent', borderRight: 0, color: '#2E5A3B', marginTop: 8 }}
         items={menuItems.map((item: any) => {
           if (item.type === 'divider') {
             return {
               type: 'group' as const,
-              label: <span style={{ color: '#64748b', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{item.label}</span>,
+              label: <span style={{ color: '#4A7C59', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{item.label}</span>,
             }
           }
           return {
@@ -87,10 +86,10 @@ function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logo
           {!collapsed && <span>API 文档</span>}
         </a>
       </div>
-      <div style={{ position: 'absolute', bottom: 0, width: '100%', padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: '#94a3b8', transition: 'all 0.2s', fontSize: 13 }}
+      <div style={{ position: 'absolute', bottom: 0, width: '100%', padding: '12px 16px', borderTop: '1px solid rgba(76,175,80,0.15)', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: '#4A7C59', transition: 'all 0.2s', fontSize: 13 }}
            onClick={logout}
-           onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#a78bfa'}
-           onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#94a3b8'}>
+           onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#1B3A24'}
+           onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#4A7C59'}>
         <SettingOutlined />
         {!collapsed && <span>设置</span>}
       </div>
