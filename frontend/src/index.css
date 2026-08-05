@@ -6,59 +6,59 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: linear-gradient(135deg, #e8f0fe 0%, #f0f4ff 25%, #fdf2f8 55%, #fef3c7 85%, #e8f5e9 100%);
-  background-attachment: fixed;
+  background: #F1F5F9;
   color: #1e293b;
-  min-height: 100vh;
 }
 
-/* 强制覆盖 Ant Design 默认背景，确保玻璃效果可见 */
-.ant-layout,
-.ant-layout-sider,
-.ant-layout-header,
-.ant-layout-content {
+/* 侧边栏展开时，主内容区与侧边栏之间加一条极细分割线 */
+.ant-layout-sider {
   background: transparent !important;
 }
 
 /* ================================================
-   Glass Effect System — Apple visionOS inspired
+   Layout System — Clean & Minimal
    ================================================ */
 
-/* Dark glass (for sidebar) */
+/* Sidebar — solid dark panel */
 .glass-dark {
-  background: linear-gradient(160deg,
-    rgba(15, 23, 42, 0.92) 0%,
-    rgba(30, 41, 59, 0.88) 50%,
-    rgba(15, 23, 42, 0.92) 100%) !important;
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  background: #10172A !important;
   border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Light glass (for header, cards) */
-.glass-light {
-  background: rgba(255, 255, 255, 0.72) !important;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+/* Mobile Drawer */
+.glass-drawer .ant-drawer-body {
+  background: #10172A;
+  padding: 12px 0;
+}
+.glass-drawer .ant-drawer-header {
+  background: #10172A;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* Card glass variant */
+/* Header — clean white with subtle elevation */
+.glass-light {
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* Content cards */
 .glass-card {
-  background: rgba(255, 255, 255, 0.64) !important;
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-color: #CBD5E1;
+}
+
+/* Content area white background */
+.content-area {
+  background: #FFFFFF !important;
 }
 
 /* ================================================
@@ -77,39 +77,26 @@ body {
   background: rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Tasks — blue */
-.sidebar-menu .ant-menu-item[data-menu-id*="tasks"] { }
+/* Selected — solid accent background per section */
+.sidebar-menu .ant-menu-item.ant-menu-item-selected {
+  background: #1E293B !important;
+  box-shadow: inset 3px 0 0 currentColor;
+}
 .sidebar-menu .ant-menu-item[data-menu-id*="tasks"].ant-menu-item-selected {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(99, 102, 241, 0.15)) !important;
-  border-left: 3px solid #3b82f6;
+  color: #60A5FA !important;
 }
-
-/* Inbox — amber */
-.sidebar-menu .ant-menu-item[data-menu-id*="inbox"] { }
 .sidebar-menu .ant-menu-item[data-menu-id*="inbox"].ant-menu-item-selected {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(251, 191, 36, 0.15)) !important;
-  border-left: 3px solid #f59e0b;
+  color: #FBBF24 !important;
 }
-
-/* Destinations — teal/emerald gradient */
 .sidebar-menu .ant-menu-item[data-menu-id*="checklist"].ant-menu-item-selected {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(20, 184, 166, 0.15)) !important;
-  border-left: 3px solid #10b981;
+  color: #34D399 !important;
 }
-
-/* Knowledge base — violet */
-.sidebar-menu .ant-menu-item[data-menu-id*="sop"],
-.sidebar-menu .ant-menu-item[data-menu-id*="documents"] { }
 .sidebar-menu .ant-menu-item[data-menu-id*="sop"].ant-menu-item-selected,
 .sidebar-menu .ant-menu-item[data-menu-id*="documents"].ant-menu-item-selected {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(168, 85, 247, 0.15)) !important;
-  border-left: 3px solid #8b5cf6;
+  color: #A78BFA !important;
 }
-
-/* New checklist — rose */
 .sidebar-menu .ant-menu-item[data-menu-id*="template=new"].ant-menu-item-selected {
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(225, 29, 72, 0.15)) !important;
-  border-left: 3px solid #f43f5e;
+  color: #FB7185 !important;
 }
 
 /* Section group title */
@@ -124,47 +111,24 @@ body {
 }
 
 /* ================================================
-   Sidebar Profile Card — Frosted glass
+   Sidebar Profile Card — Clean Accent
    ================================================ */
 
 .sidebar-profile-card {
   padding: 20px 16px 16px;
   margin: 16px 12px 8px;
-  border-radius: 16px;
+  border-radius: 14px;
   cursor: pointer;
-  background: linear-gradient(135deg,
-    rgba(99, 102, 241, 0.18) 0%,
-    rgba(139, 92, 246, 0.12) 50%,
-    rgba(168, 85, 247, 0.08) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.sidebar-profile-card::after {
-  content: '';
-  position: absolute;
-  top: -40%;
-  right: -20%;
-  width: 120px;
-  height: 120px;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.2), transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
+  background: #1E293B;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-profile-card:hover {
-  background: linear-gradient(135deg,
-    rgba(99, 102, 241, 0.28) 0%,
-    rgba(139, 92, 246, 0.2) 50%,
-    rgba(168, 85, 247, 0.14) 100%);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(99, 102, 241, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: #293548;
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
 /* Expanded layout */
@@ -172,61 +136,51 @@ body {
   display: flex;
   align-items: center;
   gap: 14px;
-  position: relative;
-  z-index: 1;
 }
 
-/* Avatar circle — glass ring */
+/* Avatar circle */
 .sidebar-avatar-circle {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+  transition: all 0.25s ease;
 }
 
 .sidebar-profile-card:hover .sidebar-avatar-circle {
-  transform: scale(1.06);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+  transform: scale(1.04);
 }
 
 .sidebar-avatar-emoji {
-  font-size: 26px;
+  font-size: 22px;
   line-height: 1;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
 }
 
 /* Collapsed */
 .sidebar-profile-collapsed {
   display: flex;
   justify-content: center;
-  position: relative;
-  z-index: 1;
 }
 
 .sidebar-avatar-collapsed {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  transition: all 0.3s ease;
-}
-
-.sidebar-profile-card:hover .sidebar-avatar-collapsed {
-  transform: scale(1.1);
+  background: linear-gradient(135deg, #6366F1, #8B5CF6);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+  transition: all 0.25s ease;
 }
 
 .sidebar-avatar-emoji-sm {
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
 }
 
@@ -237,9 +191,9 @@ body {
 }
 
 .sidebar-profile-name {
-  color: #f8fafc;
+  color: #F1F5F9;
   font-weight: 600;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
@@ -247,7 +201,7 @@ body {
 }
 
 .sidebar-profile-role {
-  color: #94a3b8;
+  color: #94A3B8;
   font-size: 12px;
   margin-top: 2px;
   display: flex;
@@ -259,8 +213,7 @@ body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+  background: #22C55E;
   display: inline-block;
 }
 
@@ -271,7 +224,7 @@ body {
   gap: 8px;
   padding: 8px 12px;
   border-radius: 8px;
-  color: #94a3b8;
+  color: #94A3B8;
   text-decoration: none;
   font-size: 13px;
   transition: all 0.2s;
@@ -279,19 +232,17 @@ body {
 
 .sidebar-bottom-link:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: #a78bfa;
+  color: #E2E8F0;
 }
 
 /* ================================================
-   Header — Frosted bar
+   Header — Clean White
    ================================================ */
 
 .glass-header {
-  background: rgba(255, 255, 255, 0.68) !important;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.03);
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 /* ================================================
@@ -299,7 +250,7 @@ body {
    ================================================ */
 
 .content-area {
-  background: transparent !important;
+  background: #FFFFFF !important;
 }
 
 /* ================================================
@@ -348,7 +299,7 @@ body {
 }
 
 /* ================================================
-   AI Panel — Glass slide-up
+   AI Panel — Solid White Slide-up
    ================================================ */
 
 .ai-panel {
@@ -357,11 +308,9 @@ body {
   right: 24px;
   width: 400px;
   height: 560px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 20px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
   box-shadow:
     0 8px 40px rgba(0, 0, 0, 0.12),
     0 0 0 1px rgba(0, 0, 0, 0.04);
@@ -376,18 +325,16 @@ body {
    ================================================ */
 
 .card {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
+  background: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s ease;
 }
 
 .card:hover {
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-color: #CBD5E1;
 }
 
 /* ================================================
@@ -437,18 +384,16 @@ body {
 }
 
 /* ================================================
-   Profile Modal — Glass overlay
+   Profile Modal — Clean Overlay
    ================================================ */
 
 .profile-modal .ant-modal-content {
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
   padding: 0;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(28px) saturate(200%);
-  -webkit-backdrop-filter: blur(28px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.15);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.12);
 }
 
 .profile-modal .ant-modal-body {
