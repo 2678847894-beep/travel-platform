@@ -16,4 +16,5 @@ services:
         value: "1"
     healthCheckPath: /api/health
     autoDeploy: true
+    buildCommand: echo "deploy-trigger-20260805v2"
 

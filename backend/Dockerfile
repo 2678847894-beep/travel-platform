@@ -1,4 +1,4 @@
-# Force rebuild 2026-08-05 - bulk delete + cascade
+# Force rebuild 2026-08-05 v2 - folder CRUD + bulk delete + cascade
 # Stage 1: Build React frontend
 FROM node:20-slim AS frontend-build
 WORKDIR /frontend
