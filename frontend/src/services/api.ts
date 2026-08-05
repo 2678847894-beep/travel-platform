@@ -45,6 +45,8 @@ export const updateSopDocument = (id: number, data: any) => api.put(`/sop/docume
 export const toggleSopStep = (docId: number, stepOrder: number) =>
   api.put(`/sop/documents/${docId}/toggle-step/${stepOrder}`)
 export const deleteSopDocument = (id: number) => api.delete(`/sop/documents/${id}`)
+export const importSopDocument = (formData: FormData) =>
+  api.post('/sop/documents/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
 export const getSopStats = () => api.get('/sop/stats')
 
 // Tasks

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Button, Input, Segmented, Progress, Modal, Form, message, Space, Tag, Tooltip, Upload, Select, Grid } from 'antd'
-import { PlusOutlined, UploadOutlined, FolderAddOutlined, SearchOutlined, FileTextOutlined, DeleteOutlined, EditOutlined, ImportOutlined } from '@ant-design/icons'
-import { getSopFolders, getSopDocuments, createSopFolder, deleteSopFolder, createSopDocument } from '../services/api'
+import { Card, Button, Input, Segmented, Progress, Modal, Form, message, Space, Tag, Tooltip, Select, Grid } from 'antd'
+import { PlusOutlined, FolderAddOutlined, SearchOutlined, FileTextOutlined, DeleteOutlined, EditOutlined, ImportOutlined } from '@ant-design/icons'
+import { getSopFolders, getSopDocuments, createSopFolder, deleteSopFolder, createSopDocument, importSopDocument } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
 export default function SopPage() {
@@ -19,6 +19,9 @@ export default function SopPage() {
   const screens = Grid.useBreakpoint()
   const isMobile = !screens.md
   const isAdmin = user?.role === 'admin'
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importModal, setImportModal] = useState(false)
+  const [importFolderId, setImportFolderId] = useState<number | null>(null)
 
   const loadData = async () => {
     const [fRes, dRes] = await Promise.all([
@@ -68,6 +71,35 @@ export default function SopPage() {
     loadData()
   }
 
+  const handleImportConfirm = () => {
+    if (importFolderId === null) {
+      message.warning('请选择目标文件夹')
+      return
+    }
+    setImportModal(false)
+    // 延迟触发确保 Modal 关闭动画完成后再打开文件选择框
+    setTimeout(() => fileInputRef.current?.click(), 100)
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('folder_id', String(importFolderId))
+    formData.append('trip_filter', tripFilter)
+    try {
+      await importSopDocument(formData)
+      message.success('文档导入成功')
+      loadData()
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail || err?.message || '未知错误'
+      message.error(`导入失败：${detail}`)
+    }
+    // 重置 input 以支持重复导入同一文件
+    e.target.value = ''
+  }
+
   const filteredDocs = search
     ? documents.filter((d) => d.title.toLowerCase().includes(search.toLowerCase()))
     : selectedFolder
@@ -88,30 +120,14 @@ export default function SopPage() {
             {isAdmin && (
               <>
                 <Button icon={<FolderAddOutlined />} onClick={() => setFolderModal(true)}>新建文件夹</Button>
-                <Upload
-                  accept=".txt,.md,.json,.csv"
-                  showUploadList={false}
-                  beforeUpload={(file) => {
-                    const reader = new FileReader()
-                    reader.onload = async (e) => {
-                      const content = e.target?.result as string
-                      await createSopDocument({
-                        folder_id: selectedFolder || folders[0]?.id,
-                        title: file.name.replace(/\.[^/.]+$/, ''),
-                        description: content.slice(0, 500),
-                        trip_filter: tripFilter,
-                        steps: [],
-                        folder_name: selectedFolder ? folders.find((f) => f.id === selectedFolder)?.name || '' : folders[0]?.name || '',
-                      })
-                      message.success('文档导入成功')
-                      loadData()
-                    }
-                    reader.readAsText(file)
-                    return false
-                  }}
-                >
-                  <Button icon={<ImportOutlined />}>导入文档</Button>
-                </Upload>
+                <Button icon={<ImportOutlined />} onClick={() => { setImportModal(true); setImportFolderId(selectedFolder || folders[0]?.id || null) }}>导入文档</Button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  accept=".txt,.md,.json,.csv,.docx,.pdf,.xlsx,.pptx"
+                  onChange={handleFileChange}
+                />
                 <Button type="primary" icon={<PlusOutlined />} onClick={() => setDocModal(true)}>新建文档</Button>
               </>
             )}
@@ -221,6 +237,22 @@ export default function SopPage() {
           </Form.Item>
           <Button type="primary" htmlType="submit" block disabled={!selectedFolder}>创建</Button>
         </Form>
+      </Modal>
+
+      {/* 选择导入文件夹弹窗 */}
+      <Modal title="选择导入文件夹" open={importModal} onCancel={() => setImportModal(false)} onOk={handleImportConfirm} okText="选择文件">
+        <div style={{ padding: '16px 0' }}>
+          <Select
+            value={importFolderId}
+            onChange={setImportFolderId}
+            placeholder="选择目标文件夹"
+            style={{ width: '100%' }}
+          >
+            {folders.map((f) => (
+              <Select.Option key={f.id} value={f.id}>{f.name}</Select.Option>
+            ))}
+          </Select>
+        </div>
       </Modal>
     </div>
   )

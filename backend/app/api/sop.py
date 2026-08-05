@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 from app.core.database import get_db
 from app.core.auth import get_current_user, require_admin
 from app.models.user import User
 from app.models.sop import SopFolder, SopDocument
 from app.schemas.schemas import SopFolderOut, SopDocumentOut, SopDocumentCreate, SopDocumentUpdate
+import io
 
 router = APIRouter(prefix='/api/sop', tags=['SOP'])
 
@@ -134,3 +135,81 @@ def toggle_step(doc_id: int, step_order: int, db: Session = Depends(get_db), _: 
     doc.steps = steps
     db.commit()
     return {'ok': True}
+
+
+def _parse_file_content(filename: str, file_bytes: bytes) -> str:
+    """根据文件扩展名解析文件内容为纯文本"""
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+
+    if ext in ('txt', 'md', 'json', 'csv'):
+        return file_bytes.decode('utf-8', errors='replace')
+
+    if ext == 'docx':
+        from docx import Document
+        doc = Document(io.BytesIO(file_bytes))
+        return '\n'.join(p.text for p in doc.paragraphs)
+
+    if ext == 'pdf':
+        from PyPDF2 import PdfReader
+        reader = PdfReader(io.BytesIO(file_bytes))
+        return '\n'.join(page.extract_text() or '' for page in reader.pages)
+
+    if ext == 'xlsx':
+        from openpyxl import load_workbook
+        wb = load_workbook(io.BytesIO(file_bytes), read_only=True)
+        lines = []
+        for sheet in wb.sheetnames:
+            ws = wb[sheet]
+            for row in ws.iter_rows(values_only=True):
+                line = ' | '.join(str(cell) if cell is not None else '' for cell in row)
+                if line.strip():
+                    lines.append(line)
+        wb.close()
+        return '\n'.join(lines)
+
+    if ext == 'pptx':
+        from pptx import Presentation
+        prs = Presentation(io.BytesIO(file_bytes))
+        texts = []
+        for slide in prs.slides:
+            for shape in slide.shapes:
+                if shape.has_text_frame:
+                    for para in shape.text_frame.paragraphs:
+                        t = para.text.strip()
+                        if t:
+                            texts.append(t)
+        return '\n'.join(texts)
+
+    raise HTTPException(status_code=400, detail=f'不支持的文件格式: .{ext}')
+
+
+@router.post('/documents/import', response_model=SopDocumentOut)
+async def import_document(
+    folder_id: int = Form(...),
+    trip_filter: str = Form('香港差旅'),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail='未选择文件')
+
+    file_bytes = await file.read()
+    content = _parse_file_content(file.filename, file_bytes)
+
+    title = file.filename.rsplit('.', 1)[0] if '.' in file.filename else file.filename
+    description = content[:500]
+
+    doc = SopDocument(
+        folder_id=folder_id,
+        title=title,
+        description=description,
+        trip_filter=trip_filter,
+        steps=[],
+    )
+    db.add(doc)
+    db.commit()
+    db.refresh(doc)
+    if doc.folder:
+        doc.folder_name = doc.folder.name
+    return doc
