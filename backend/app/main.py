@@ -26,6 +26,9 @@ with engine.connect() as conn:
         "ALTER TABLE sop_folders ADD COLUMN IF NOT EXISTS trip_filter VARCHAR(50) DEFAULT '香港差旅'"
     ))
     conn.execute(text(
+        "ALTER TABLE sop_folders ADD COLUMN IF NOT EXISTS icon VARCHAR(10) DEFAULT '📁'"
+    ))
+    conn.execute(text(
         "ALTER TABLE sop_documents ADD COLUMN IF NOT EXISTS trip_filter VARCHAR(50) DEFAULT '香港差旅'"
     ))
     conn.commit()

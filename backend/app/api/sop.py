@@ -31,11 +31,30 @@ def list_folders(trip_filter: str = None, db: Session = Depends(get_db), _: User
 def create_folder(body: SopFolderCreate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
     folder = SopFolder(
         name=body.name,
+        icon=body.icon,
         description="",
         sort_order=body.order_index,
         trip_filter=body.trip_filter,
     )
     db.add(folder)
+    db.commit()
+    db.refresh(folder)
+    return folder
+
+
+class SopFolderUpdate(BaseModel):
+    name: Optional[str] = None
+    icon: Optional[str] = None
+
+
+@router.put('/folders/{folder_id}', response_model=SopFolderOut)
+def update_folder(folder_id: int, body: SopFolderUpdate, db: Session = Depends(get_db), _: User = Depends(require_admin)):
+    folder = db.query(SopFolder).filter(SopFolder.id == folder_id).first()
+    if not folder:
+        raise HTTPException(status_code=404, detail='Not found')
+    update_data = body.model_dump(exclude_unset=True)
+    for key, val in update_data.items():
+        setattr(folder, key, val)
     db.commit()
     db.refresh(folder)
     return folder

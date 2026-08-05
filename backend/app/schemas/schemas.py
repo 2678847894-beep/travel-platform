@@ -51,6 +51,7 @@ class SopDocumentOut(BaseModel):
 class SopFolderOut(BaseModel):
     id: int
     name: str
+    icon: str = "📁"
     description: Optional[str] = ""
     sort_order: int = 0
     trip_filter: str = "香港差旅"

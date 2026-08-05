@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input, Segmented, Progress, Modal, Form, message, Space, Tag, Tooltip, Select, Grid } from 'antd'
 import { PlusOutlined, FolderAddOutlined, SearchOutlined, FileTextOutlined, DeleteOutlined, EditOutlined, ImportOutlined } from '@ant-design/icons'
-import { getSopFolders, getSopDocuments, createSopFolder, deleteSopFolder, createSopDocument, importSopDocument } from '../services/api'
+import { getSopFolders, getSopDocuments, createSopFolder, deleteSopFolder, createSopDocument, importSopDocument, updateSopFolder } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
 export default function SopPage() {
@@ -56,6 +56,15 @@ export default function SopPage() {
         }
       },
     })
+  }
+
+  const handleRenameFolder = async (values: any) => {
+    if (!renameFolder) return
+    await updateSopFolder(renameFolder.id, { name: values.name, icon: values.icon })
+    message.success('文件夹已更新')
+    setRenameModal(false)
+    setRenameFolder(null)
+    loadData()
   }
 
   const handleCreateDoc = async (values: any) => {
@@ -143,36 +152,53 @@ export default function SopPage() {
       </Card>
 
       {/* 文件夹列表 */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(1, 1fr)' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {folders.map((folder) => (
-          <Card
-            key={folder.id}
-            className="card"
-            hoverable
-            onClick={() => { setSelectedFolder(folder.id); setSearch('') }}
-            style={{ borderLeft: selectedFolder === folder.id ? '4px solid #3b82f6' : '4px solid transparent' }}
-            title={
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 20 }}>{folder.icon}</span>
-                <span>{folder.name}</span>
-                <Tag>{folder.sop_count || 0}篇</Tag>
-              </div>
-            }
-            extra={
-              isAdmin && (
-                <Button type="text" danger size="small" icon={<DeleteOutlined />} onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder.id) }} />
-              )
-            }
-          >
+          <div key={folder.id}>
+            <div
+              className="card"
+              onClick={() => { setSelectedFolder(folder.id); setSearch('') }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                padding: '12px 16px',
+                cursor: 'pointer',
+                borderLeft: selectedFolder === folder.id ? '3px solid #3b82f6' : '3px solid transparent',
+                background: selectedFolder === folder.id ? '#EFF6FF' : '#fff',
+                transition: 'all 0.2s',
+              }}
+            >
+              <span style={{ fontSize: 20, marginRight: 12, flexShrink: 0 }}>{folder.icon}</span>
+              <span style={{ fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{folder.name}</span>
+              <Tag style={{ marginRight: 8, flexShrink: 0 }}>{folder.documents?.length ?? 0}篇</Tag>
+              {isAdmin && (
+                <Space size={4} style={{ flexShrink: 0 }}>
+                  <Button type="text" size="small" icon={<EditOutlined />}
+                    onClick={(e) => { e.stopPropagation(); setRenameFolder(folder); setRenameModal(true) }} />
+                  <Button type="text" danger size="small" icon={<DeleteOutlined />}
+                    onClick={(e) => { e.stopPropagation(); handleDeleteFolder(folder.id) }} />
+                </Space>
+              )}
+            </div>
             {folder.children?.map((child: any) => (
-              <div key={child.id} style={{ padding: '8px 0', borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }}
-                onClick={(e) => { e.stopPropagation(); setSelectedFolder(child.id) }}>
-                <FileTextOutlined style={{ marginRight: 8 }} />
-                {child.name}
-                <Tag style={{ marginLeft: 8 }}>{child.sop_count || 0}</Tag>
+              <div key={child.id}
+                onClick={(e) => { e.stopPropagation(); setSelectedFolder(child.id) }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '8px 16px 8px 52px',
+                  cursor: 'pointer',
+                  borderLeft: selectedFolder === child.id ? '3px solid #3b82f6' : '3px solid transparent',
+                  background: selectedFolder === child.id ? '#EFF6FF' : '#fff',
+                  borderBottom: '1px solid #f1f5f9',
+                  transition: 'all 0.2s',
+                }}>
+                <FileTextOutlined style={{ marginRight: 8, color: '#94a3b8', flexShrink: 0 }} />
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{child.name}</span>
+                <Tag style={{ flexShrink: 0 }}>{child.documents?.length ?? 0}</Tag>
               </div>
             ))}
-          </Card>
+          </div>
         ))}
       </div>
 
@@ -236,6 +262,19 @@ export default function SopPage() {
             <Input.TextArea rows={2} />
           </Form.Item>
           <Button type="primary" htmlType="submit" block disabled={!selectedFolder}>创建</Button>
+        </Form>
+      </Modal>
+
+      {/* 重命名文件夹弹窗 */}
+      <Modal title="编辑文件夹" open={renameModal} onCancel={() => { setRenameModal(false); setRenameFolder(null) }} footer={null}>
+        <Form onFinish={handleRenameFolder} layout="vertical" initialValues={{ name: renameFolder?.name, icon: renameFolder?.icon }}>
+          <Form.Item name="name" label="文件夹名称" rules={[{ required: true }]}>
+            <Input placeholder="文件夹名称" />
+          </Form.Item>
+          <Form.Item name="icon" label="图标">
+            <Input placeholder="emoji图标" />
+          </Form.Item>
+          <Button type="primary" htmlType="submit" block>保存</Button>
         </Form>
       </Modal>
 

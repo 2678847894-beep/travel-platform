@@ -9,6 +9,7 @@ class SopFolder(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
+    icon = Column(String(10), default="📁")
     description = Column(Text, default="")
     sort_order = Column(Integer, default=0)
     trip_filter = Column(String(50), default="香港差旅")

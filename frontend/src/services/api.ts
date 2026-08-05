@@ -36,6 +36,8 @@ export const getMe = () => api.get('/auth/me')
 export const getSopFolders = (tripFilter = '全部') =>
   api.get('/sop/folders', { params: { trip_filter: tripFilter } })
 export const createSopFolder = (data: any) => api.post('/sop/folders', data)
+export const updateSopFolder = (id: number, data: {name?: string, icon?: string}) =>
+  api.put(`/sop/folders/${id}`, data)
 export const deleteSopFolder = (id: number) => api.delete(`/sop/folders/${id}`)
 export const getSopDocuments = (folderId?: number, tripFilter = '全部') =>
   api.get('/sop/documents', { params: { folder_id: folderId, trip_filter: tripFilter } })
