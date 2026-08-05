@@ -1,0 +1,35 @@
+#!/bin/sh
+# Pre-push hook: ?? force push???? fetch ???????
+
+remote="$1"
+url="$2"
+
+while read local_ref local_sha remote_ref remote_sha; do
+  # Skip if remote doesn't have this branch yet (first push)
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    continue
+  fi
+
+  # Fast-forward check: is remote_sha an ancestor of local_sha?
+  git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null
+  if [ $? -ne 0 ]; then
+    echo ""
+    echo "=============================================="
+    echo "  BLOCKED: This push would lose remote commits!"
+    echo "=============================================="
+    echo ""
+    echo "Your local branch is missing commits that exist on remote."
+    echo "This means a force push would permanently delete them."
+    echo ""
+    echo "Remote-only commits:"
+    br=$(echo "$remote_ref" | sed 's|refs/heads/||')
+    git fetch origin "$br" 2>/dev/null
+    git log --oneline "$local_sha..origin/$br" 2>/dev/null
+    echo ""
+    echo "Action: use 'git pull --rebase' to pull these in, then push normally."
+    echo ""
+    exit 1
+  fi
+done
+
+exit 0
