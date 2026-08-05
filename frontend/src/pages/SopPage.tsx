@@ -43,9 +43,14 @@ export default function SopPage() {
       title: '确认删除',
       content: '删除文件夹将同时删除其下所有SOP文档，确定继续？',
       onOk: async () => {
-        await deleteSopFolder(id)
-        message.success('已删除')
-        loadData()
+        try {
+          await deleteSopFolder(id)
+          message.success('已删除')
+          loadData()
+        } catch (err: any) {
+          const detail = err?.response?.data?.detail || err?.message || '未知错误'
+          message.error(`删除失败：${detail}`)
+        }
       },
     })
   }
