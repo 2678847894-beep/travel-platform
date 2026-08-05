@@ -3,7 +3,7 @@ services:
     name: travel-backend
     env: docker
     dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    dockerContext: .
     plan: free
     envVars:
       - key: DATABASE_URL
