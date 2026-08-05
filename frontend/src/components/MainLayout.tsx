@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Layout, Menu, Input, Tooltip, Drawer, Grid, Button } from 'antd'
 import {
@@ -122,6 +122,41 @@ export default function MainLayout() {
   const screens = Grid.useBreakpoint()
   const isMobile = !screens.md
 
+  // AI 拖拽
+  const [fabPos, setFabPos] = useState({ x: 0, y: 0 })
+  const dragRef = useRef({ dragging: false, startX: 0, startY: 0, posX: 0, posY: 0 })
+  const hasMoved = useRef(false)
+
+  const handleFabPointerDown = useCallback((e: React.PointerEvent) => {
+    hasMoved.current = false
+    dragRef.current = {
+      dragging: true,
+      startX: e.clientX,
+      startY: e.clientY,
+      posX: fabPos.x,
+      posY: fabPos.y,
+    };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId)
+  }, [fabPos])
+
+  const handleFabPointerMove = useCallback((e: React.PointerEvent) => {
+    if (!dragRef.current.dragging) return
+    const dx = e.clientX - dragRef.current.startX
+    const dy = e.clientY - dragRef.current.startY
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      hasMoved.current = true
+    }
+    setFabPos({
+      x: dragRef.current.posX + dx,
+      y: dragRef.current.posY + dy,
+    })
+  }, [])
+
+  const handleFabPointerUp = useCallback((e: React.PointerEvent) => {
+    dragRef.current.dragging = false;
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId)
+  }, [])
+
   const currentKey = location.pathname.replace('/chalv', '') + location.search
 
   return (
@@ -176,7 +211,20 @@ export default function MainLayout() {
 
       {/* AI悬浮按钮 */}
       <Tooltip title="AI差旅助手">
-        <div className="ai-fab" onClick={() => setAiOpen(!aiOpen)} style={isMobile ? { bottom: 16, right: 16 } : {}}>
+        <div
+          className="ai-fab"
+          onPointerDown={handleFabPointerDown}
+          onPointerMove={handleFabPointerMove}
+          onPointerUp={handleFabPointerUp}
+          onClick={() => { if (!hasMoved.current) setAiOpen(!aiOpen) }}
+          style={{
+            ...(isMobile ? { bottom: 16, right: 16 } : {}),
+            transform: fabPos.x !== 0 || fabPos.y !== 0
+              ? `translate(${fabPos.x}px, ${fabPos.y}px)`
+              : undefined,
+            touchAction: 'none',
+          }}
+        >
           <RobotOutlined style={{ fontSize: 24 }} />
         </div>
       </Tooltip>

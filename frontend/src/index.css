@@ -60,25 +60,26 @@ body {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #66BB6A, #43A047);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+  cursor: grab;
+  box-shadow: 0 4px 16px rgba(102, 187, 106, 0.4);
   z-index: 999;
-  transition: transform 0.2s;
+  transition: box-shadow 0.2s;
+  user-select: none;
   animation: breathe 2s ease-in-out infinite;
 }
 
-.ai-fab:hover {
-  transform: scale(1.1);
+.ai-fab:active {
+  cursor: grabbing;
 }
 
 @keyframes breathe {
-  0%, 100% { box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4); }
-  50% { box-shadow: 0 4px 24px rgba(59, 130, 246, 0.7); }
+  0%, 100% { box-shadow: 0 4px 16px rgba(102, 187, 106, 0.4); }
+  50% { box-shadow: 0 4px 24px rgba(102, 187, 106, 0.7); }
 }
 
 /* AI 聊天面板 */
