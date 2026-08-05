@@ -94,16 +94,7 @@ CREATE TABLE public.document_files (
 INSERT INTO public.users VALUES (1, 'Pear', '$2b$12$EkWBV2tG1EHI44zOMxRYnuwWFdeKdnI6Vg7ORdoIJmJtSmr1cHUzC', 'Pear', 'admin', true, '2026-07-20 08:14:26');
 INSERT INTO public.users VALUES (2, 'employee', '$2b$12$EkWBV2tG1EHI44zOMxRYnuwWFdeKdnI6Vg7ORdoIJmJtSmr1cHUzC', '员工', 'employee', true, '2026-07-20 08:14:26');
 
-INSERT INTO public.sop_folders VALUES (1, '1-直播准备', '设备调试与预热', 1, NULL, '2026-07-20 08:14:26');
-INSERT INTO public.sop_folders VALUES (2, '2-出行前准备', '证件/行李/机票', 2, NULL, '2026-07-20 08:14:26');
-INSERT INTO public.sop_folders VALUES (3, '3-入住酒店', '预约/登记/客房检查', 3, NULL, '2026-07-20 08:14:26');
-INSERT INTO public.sop_folders VALUES (4, '4-采购流程', '选品/比价/下单', 4, NULL, '2026-07-20 08:14:26');
-INSERT INTO public.sop_folders VALUES (5, '5-直播执行', '直播前中后操作', 5, NULL, '2026-07-20 08:14:26');
-INSERT INTO public.sop_folders VALUES (6, '6-返程', '结账/退房/返程', 6, NULL, '2026-07-20 08:14:26');
-INSERT INTO public.sop_folders VALUES (7, '7-售后&复盘', '售后处理与数据复盘', 7, NULL, '2026-07-20 08:14:26');
-
 SELECT setval('public.users_id_seq', 2, true);
-SELECT setval('public.sop_folders_id_seq', 7, true);
 
 -- Migration: add trip_filter column to sop_folders
 ALTER TABLE public.sop_folders ADD COLUMN IF NOT EXISTS trip_filter VARCHAR(50) DEFAULT '香港差旅';
