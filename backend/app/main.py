@@ -1,6 +1,6 @@
 # redeploy trigger
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
@@ -60,3 +60,9 @@ app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads"
 @app.get("/api/health")
 def health():
     return {"status": "ok", "service": "差旅管家"}
+
+
+@app.get("/")
+def root():
+    """访问根路径直接跳转 Swagger 文档，避免空 404 迷惑用户"""
+    return RedirectResponse(url="/docs")

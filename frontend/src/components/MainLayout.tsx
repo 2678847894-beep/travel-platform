@@ -1,27 +1,63 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Input, Avatar, Tooltip, Drawer, Grid, Button } from 'antd'
+import { Layout, Menu, Input, Tooltip, Drawer, Grid, Button } from 'antd'
 import {
   MenuFoldOutlined, MenuUnfoldOutlined, SearchOutlined,
   CheckSquareOutlined, InboxOutlined, FileTextOutlined,
   FolderOutlined, SettingOutlined,
-  GlobalOutlined, HomeOutlined, PlusOutlined, RobotOutlined
+  GlobalOutlined, HomeOutlined, PlusOutlined, RobotOutlined, CodeOutlined
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/authStore'
+import { getAnimalAvatar } from '../utils/avatar'
 import AiAssistant from './AiAssistant'
+import ProfileModal from './ProfileModal'
 
 const { Sider, Content, Header } = Layout
 
 // 侧边栏内容组件（桌面端 Sider 和移动端 Drawer 共用）
-function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logout }: any) {
+function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logout, onProfileClick }: any) {
+  const animal = user ? getAnimalAvatar(user.id) : null
+
   return (
     <>
-      <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Avatar style={{ background: '#3b82f6' }} icon={<span>👤</span>} />
-          {!collapsed && <span style={{ color: '#fff', fontWeight: 600 }}>{user?.display_name || '用户'}</span>}
-        </div>
-        {!collapsed && <div style={{ color: '#94a3b8', fontSize: 12, marginTop: 4 }}>{user?.role === 'admin' ? '管理员' : '员工'}</div>}
+      {/* 用户资料卡片 */}
+      <div
+        className="sidebar-profile-card"
+        style={collapsed ? { padding: '12px 8px' } : {}}
+        onClick={onProfileClick}
+      >
+        {collapsed ? (
+          <div className="sidebar-profile-collapsed">
+            {animal && (
+              <div
+                className="sidebar-avatar-collapsed"
+                style={{ background: animal.bg }}
+              >
+                <span className="sidebar-avatar-emoji-sm">{animal.emoji}</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="sidebar-profile-expanded">
+            {animal && (
+              <div
+                className="sidebar-avatar-circle"
+                style={{ background: animal.bg }}
+              >
+                <span className="sidebar-avatar-emoji">{animal.emoji}</span>
+              </div>
+            )}
+            <div className="sidebar-profile-text">
+              <div className="sidebar-profile-name">
+                {user?.display_name || '用户'}
+              </div>
+              <div className="sidebar-profile-role">
+                {user?.role === 'admin' ? '管理员' : '员工'}
+                <span className="sidebar-profile-dot" />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <Menu
         mode="inline"
@@ -43,6 +79,15 @@ function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logo
         })}
         onClick={({ key }) => navigate('/chalv' + key)}
       />
+      <div style={{ position: 'absolute', bottom: 40, width: '100%', padding: '0 16px' }}>
+        <a href="https://travel-platform-teo8.onrender.com/docs" target="_blank" rel="noopener noreferrer"
+           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, color: '#94a3b8', textDecoration: 'none', fontSize: 13, transition: 'all 0.2s' }}
+           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.color = '#A7D1A0' }}
+           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#94a3b8' }}>
+          <CodeOutlined />
+          {!collapsed && <span>API 文档</span>}
+        </a>
+      </div>
       <div style={{ position: 'absolute', bottom: 0, width: '100%', padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: '#94a3b8' }}
            onClick={logout}>
         <SettingOutlined />
@@ -70,6 +115,7 @@ export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [aiOpen, setAiOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
@@ -89,7 +135,7 @@ export default function MainLayout() {
           width={260}
           style={{ background: '#1e293b', overflow: 'auto', height: '100vh', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}
         >
-          <SidebarContent collapsed={collapsed} user={user} menuItems={menuItems} currentKey={currentKey} navigate={navigate} logout={logout} />
+          <SidebarContent collapsed={collapsed} user={user} menuItems={menuItems} currentKey={currentKey} navigate={navigate} logout={logout} onProfileClick={() => setProfileOpen(true)} />
         </Sider>
       )}
       {isMobile && (
@@ -101,7 +147,7 @@ export default function MainLayout() {
           bodyStyle={{ padding: 0, background: '#1e293b' }}
           headerStyle={{ display: 'none' }}
         >
-          <SidebarContent collapsed={false} user={user} menuItems={menuItems} currentKey={currentKey} navigate={(k: string) => { navigate(k); setDrawerOpen(false) }} logout={() => { logout(); setDrawerOpen(false) }} />
+          <SidebarContent collapsed={false} user={user} menuItems={menuItems} currentKey={currentKey} navigate={(k: string) => { navigate(k); setDrawerOpen(false) }} logout={() => { logout(); setDrawerOpen(false) }} onProfileClick={() => { setProfileOpen(true); setDrawerOpen(false) }} />
         </Drawer>
       )}
 
@@ -137,6 +183,9 @@ export default function MainLayout() {
 
       {/* AI聊天面板 */}
       {aiOpen && <AiAssistant onClose={() => setAiOpen(false)} />}
+
+      {/* 个人资料弹窗 */}
+      <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
     </Layout>
   )
 }
