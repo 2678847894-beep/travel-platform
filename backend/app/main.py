@@ -22,6 +22,12 @@ with engine.connect() as conn:
     conn.execute(text(
         "ALTER TABLE daily_tasks ADD COLUMN IF NOT EXISTS completed_date DATE"
     ))
+    conn.execute(text(
+        "ALTER TABLE sop_folders ADD COLUMN IF NOT EXISTS trip_filter VARCHAR(50) DEFAULT '香港差旅'"
+    ))
+    conn.execute(text(
+        "ALTER TABLE sop_documents ADD COLUMN IF NOT EXISTS trip_filter VARCHAR(50) DEFAULT '香港差旅'"
+    ))
     conn.commit()
 
 app = FastAPI(title="差旅管家 API", version="1.0.0")
