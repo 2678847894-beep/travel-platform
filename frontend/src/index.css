@@ -19,22 +19,24 @@ body {
    Layout System — Clean & Minimal
    ================================================ */
 
-/* Sidebar — solid dark panel */
-/* Sidebar — solid dark panel with subtle depth */
+/* Sidebar — light green panel */
 .glass-dark {
-  background: #0B1120 !important;
-  border-right: none !important;
-  box-shadow: 2px 0 24px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(160deg,
+    rgba(200, 230, 201, 0.95) 0%,
+    rgba(232, 245, 233, 0.92) 50%,
+    rgba(200, 230, 201, 0.95) 100%) !important;
+  border-right: 1px solid rgba(76, 175, 80, 0.18) !important;
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.06);
 }
 
 /* Mobile Drawer */
 .glass-drawer .ant-drawer-body {
-  background: #0B1120;
+  background: #C8E6C9;
   padding: 12px 0;
 }
 .glass-drawer .ant-drawer-header {
-  background: #0B1120;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: #C8E6C9;
+  border-bottom: 1px solid rgba(76, 175, 80, 0.18);
 }
 
 /* Header — clean white with subtle elevation */
@@ -60,7 +62,7 @@ body {
 
 /* Content area white background */
 .content-area {
-  background: #FFFFFF !important;
+  background: #F8FAF8 !important;
 }
 
 /* ================================================
@@ -81,17 +83,18 @@ body {
   line-height: 40px;
   padding-left: 14px !important;
   transition: all 0.15s ease;
-  color: #94A3B8;
+  color: #2E5A3B !important;
   font-size: 13px;
 }
 .sidebar-menu .ant-menu-item .anticon {
   font-size: 16px;
-  opacity: 0.7;
+  color: #4A7C59;
+  opacity: 1;
   transition: opacity 0.15s;
 }
 .sidebar-menu .ant-menu-item:hover {
-  background: rgba(255, 255, 255, 0.06) !important;
-  color: #E2E8F0;
+  background: rgba(76, 175, 80, 0.10) !important;
+  color: #1B3A24 !important;
 }
 .sidebar-menu .ant-menu-item:hover .anticon {
   opacity: 1;
@@ -99,33 +102,34 @@ body {
 
 /* Selected — colored left stripe + subtle bg */
 .sidebar-menu .ant-menu-item.ant-menu-item-selected {
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: rgba(76, 175, 80, 0.12) !important;
   box-shadow: inset 3px 0 0 currentColor;
+  font-weight: 600;
 }
 .sidebar-menu .ant-menu-item.ant-menu-item-selected .anticon {
   opacity: 1;
 }
 
-/* Selected — solid accent background per section */
+/* Selected — accent colors per section */
 .sidebar-menu .ant-menu-item.ant-menu-item-selected {
-  background: #1E293B !important;
+  background: rgba(76, 175, 80, 0.12) !important;
   box-shadow: inset 3px 0 0 currentColor;
 }
 .sidebar-menu .ant-menu-item[data-menu-id*="tasks"].ant-menu-item-selected {
-  color: #60A5FA !important;
+  color: #2E7D32 !important;
 }
 .sidebar-menu .ant-menu-item[data-menu-id*="inbox"].ant-menu-item-selected {
-  color: #FBBF24 !important;
+  color: #E65100 !important;
 }
 .sidebar-menu .ant-menu-item[data-menu-id*="checklist"].ant-menu-item-selected {
-  color: #34D399 !important;
+  color: #00695C !important;
 }
 .sidebar-menu .ant-menu-item[data-menu-id*="sop"].ant-menu-item-selected,
 .sidebar-menu .ant-menu-item[data-menu-id*="documents"].ant-menu-item-selected {
-  color: #A78BFA !important;
+  color: #512DA8 !important;
 }
 .sidebar-menu .ant-menu-item[data-menu-id*="template=new"].ant-menu-item-selected {
-  color: #FB7185 !important;
+  color: #AD1457 !important;
 }
 
 /* Section group title */
@@ -135,7 +139,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #475569 !important;
+  color: #2E5A3B !important;
   margin-top: 12px;
   margin-bottom: 2px;
 }
@@ -149,16 +153,16 @@ body {
   margin: 12px 10px 4px;
   border-radius: 12px;
   cursor: pointer;
-  background: #111827;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(76, 175, 80, 0.20);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transition: all 0.2s ease;
 }
 
 .sidebar-profile-card:hover {
-  background: #182032;
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.90);
+  border-color: rgba(76, 175, 80, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* Expanded layout */
@@ -177,7 +181,7 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
   transition: all 0.2s ease;
 }
 
@@ -203,7 +207,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
   transition: all 0.2s ease;
 }
 
@@ -219,7 +223,7 @@ body {
 }
 
 .sidebar-profile-name {
-  color: #F1F5F9;
+  color: #1B3A24;
   font-weight: 600;
   font-size: 14px;
   line-height: 1.3;
@@ -229,7 +233,7 @@ body {
 }
 
 .sidebar-profile-role {
-  color: #94A3B8;
+  color: #4A7C59;
   font-size: 11px;
   margin-top: 2px;
   display: flex;
@@ -253,15 +257,15 @@ body {
   gap: 8px;
   padding: 8px 12px;
   border-radius: 8px;
-  color: #64748B;
+  color: #2E5A3B;
   text-decoration: none;
   font-size: 12px;
   transition: all 0.15s ease;
 }
 
 .sidebar-bottom-link:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #CBD5E1;
+  background: rgba(76, 175, 80, 0.10);
+  color: #1B3A24;
 }
 
 /* ================================================
