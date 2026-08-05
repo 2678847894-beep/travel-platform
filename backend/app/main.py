@@ -68,5 +68,7 @@ def health():
     return {"status": "ok", "service": "差旅管家"}
 
 
-# 前端 SPA：所有非 API/非上传路径回退到 index.html
-app.mount("/", StaticFiles(directory="static", html=True), name="frontend")
+# 前端 SPA：如果 static 目录存在（Docker 镜像内打包），则 serve 前端
+static_dir = "static"
+if os.path.isdir(static_dir):
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
