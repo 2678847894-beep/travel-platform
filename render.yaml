@@ -2,7 +2,7 @@ services:
   - type: web
     name: travel-backend
     env: docker
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: free
     envVars:
