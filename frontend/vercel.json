@@ -1,17 +1,4 @@
 {
-  "rewrites": [
-    {
-      "source": "/((?!chalv).*)",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/chalv/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "installCommand": "npm install",
-  "framework": "vite"
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
 
