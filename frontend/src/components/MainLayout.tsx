@@ -60,9 +60,10 @@ function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logo
         )}
       </div>
       <Menu
+        className="sidebar-menu"
         mode="inline"
         selectedKeys={[currentKey]}
-        style={{ background: 'transparent', borderRight: 0, color: '#fff', marginTop: 8 }}
+        style={{ background: 'transparent', borderRight: 0, color: '#f8fafc', marginTop: 8 }}
         theme="dark"
         items={menuItems.map((item: any) => {
           if (item.type === 'divider') {
@@ -81,17 +82,17 @@ function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logo
       />
       <div style={{ position: 'absolute', bottom: 40, width: '100%', padding: '0 16px' }}>
         <a href="https://travel-platform-teo8.onrender.com/docs" target="_blank" rel="noopener noreferrer"
-           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, color: '#94a3b8', textDecoration: 'none', fontSize: 13, transition: 'all 0.2s' }}
-           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLElement).style.color = '#A7D1A0' }}
-           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#94a3b8' }}>
+           className="sidebar-bottom-link">
           <CodeOutlined />
           {!collapsed && <span>API 文档</span>}
         </a>
       </div>
-      <div style={{ position: 'absolute', bottom: 0, width: '100%', padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: '#94a3b8' }}
-           onClick={logout}>
+      <div style={{ position: 'absolute', bottom: 0, width: '100%', padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', color: '#94a3b8', transition: 'all 0.2s', fontSize: 13 }}
+           onClick={logout}
+           onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#a78bfa'}
+           onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = '#94a3b8'}>
         <SettingOutlined />
-        {!collapsed && <span style={{ fontSize: 13 }}>设置</span>}
+        {!collapsed && <span>设置</span>}
       </div>
     </>
   )
@@ -168,7 +169,8 @@ export default function MainLayout() {
           collapsible
           collapsed={collapsed}
           width={260}
-          style={{ background: '#1e293b', overflow: 'auto', height: '100vh', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}
+          className="glass-dark"
+          style={{ overflow: 'auto', height: '100vh', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}
         >
           <SidebarContent collapsed={collapsed} user={user} menuItems={menuItems} currentKey={currentKey} navigate={navigate} logout={logout} onProfileClick={() => setProfileOpen(true)} />
         </Sider>
@@ -179,7 +181,8 @@ export default function MainLayout() {
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
           width={260}
-          bodyStyle={{ padding: 0, background: '#1e293b' }}
+          className="glass-drawer"
+          bodyStyle={{ padding: 0, background: 'transparent' }}
           headerStyle={{ display: 'none' }}
         >
           <SidebarContent collapsed={false} user={user} menuItems={menuItems} currentKey={currentKey} navigate={(k: string) => { navigate(k); setDrawerOpen(false) }} logout={() => { logout(); setDrawerOpen(false) }} onProfileClick={() => { setProfileOpen(true); setDrawerOpen(false) }} />
@@ -189,7 +192,7 @@ export default function MainLayout() {
       {/* 主内容 */}
       <Layout style={{ marginLeft: isMobile ? 0 : (collapsed ? 80 : 260), transition: 'margin-left 0.2s' }}>
         {/* 顶部栏 */}
-        <Header style={{ background: '#fff', padding: isMobile ? '0 12px' : '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', height: 56, position: 'sticky', top: 0, zIndex: 5 }}>
+        <Header className="glass-header" style={{ padding: isMobile ? '0 12px' : '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56, position: 'sticky', top: 0, zIndex: 5 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16 }}>
             <span onClick={() => isMobile ? setDrawerOpen(true) : setCollapsed(!collapsed)} style={{ cursor: 'pointer', fontSize: 18 }}>
               {isMobile ? <MenuUnfoldOutlined /> : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />)}
@@ -204,7 +207,7 @@ export default function MainLayout() {
         </Header>
 
         {/* 内容区 */}
-        <Content style={{ padding: isMobile ? 12 : 24, minHeight: 'calc(100vh - 56px)', background: '#f8fafc' }}>
+        <Content className="content-area" style={{ padding: isMobile ? 12 : 24, minHeight: 'calc(100vh - 56px)' }}>
           <Outlet />
         </Content>
       </Layout>
