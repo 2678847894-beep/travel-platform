@@ -1,3 +1,4 @@
+# Force rebuild 2026-08-05 - bulk delete + cascade
 # Stage 1: Build React frontend
 FROM node:20-slim AS frontend-build
 WORKDIR /frontend
