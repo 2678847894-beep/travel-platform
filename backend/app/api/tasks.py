@@ -213,6 +213,8 @@ async def ai_import_preview(
             return runs[0].bold or False
 
         # Extract from paragraphs with structure-aware filtering
+        current_group = None  # Track current bold heading as group name
+
         for para in doc.paragraphs:
             text = para.text.strip()
             if not text:
@@ -223,7 +225,12 @@ async def ai_import_preview(
             if 'heading' in style_name or '标题' in style_name:
                 continue
 
-            # 2. List items with numbering → ALWAYS keep (these are tasks)
+            # 2. Bold paragraph → create a group; subsequent list items inherit trip_filter
+            if _is_bold(para):
+                current_group = text
+                continue
+
+            # 3. List items with numbering → ALWAYS keep, assign to current group
             if _is_list_item(para):
                 cleaned = re.sub(r'^[\d一二三四五六七八九十]+[\.\、\)）]\s*', '', text).strip()
                 preview.append({
@@ -231,11 +238,8 @@ async def ai_import_preview(
                     'task_date': today.isoformat(),
                     'end_date': (today + timedelta(days=365)).isoformat(),
                     'description': '',
+                    'trip_filter': current_group or '全部',
                 })
-                continue
-
-            # 3. Bold plain text → likely section header, skip
-            if _is_bold(para):
                 continue
 
             # 4. Non-list, non-heading, non-bold plain text:
@@ -259,6 +263,7 @@ async def ai_import_preview(
                 'task_date': today.isoformat(),
                 'end_date': (today + timedelta(days=365)).isoformat(),
                 'description': '',
+                'trip_filter': current_group or '全部',
             })
 
         # Extract from tables (keep structured data as-is)
