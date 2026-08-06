@@ -14,11 +14,11 @@ import {
 import { useAuthStore } from '../store/authStore'
 
 const TRIP_GROUPS = ['香港差旅', '欧洲差旅', '日本差旅', '国内差旅']
-const TRIP_FILTERS = ['全部', '香港差旅', '欧洲差旅', '日本差旅', '国内差旅']
+const TRIP_FILTERS = ['香港差旅', '欧洲差旅', '日本差旅', '国内差旅']
 
 export default function TodayPage() {
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs())
-  const [tripFilter, setTripFilter] = useState('全部')
+  const [tripFilter, setTripFilter] = useState('香港差旅')
   const [tasks, setTasks] = useState<any[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [form] = Form.useForm()
@@ -193,7 +193,7 @@ export default function TodayPage() {
                 form.resetFields()
                 form.setFieldsValue({
                   task_date: selectedDate,
-                  trip_filter: tripFilter !== '全部' ? tripFilter : undefined,
+                  trip_filter: tripFilter,
                   end_date: selectedDate.add(1, 'year'),
                 })
                 setModalOpen(true)
@@ -279,7 +279,7 @@ export default function TodayPage() {
                     {task.title}
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
-                    {task.trip_filter && task.trip_filter !== '全部' && (
+                    {task.trip_filter && (
                       <Tag color="blue">{task.trip_filter}</Tag>
                     )}
                     {task.task_time && (
@@ -322,7 +322,7 @@ export default function TodayPage() {
           layout="vertical"
           initialValues={{
             task_date: selectedDate,
-            trip_filter: tripFilter !== '全部' ? tripFilter : undefined,
+            trip_filter: tripFilter,
             end_date: selectedDate.add(1, 'year'),
           }}
         >
