@@ -4,8 +4,6 @@ import { UploadOutlined, FolderAddOutlined, SearchOutlined, DownloadOutlined, De
 import { getDocumentFiles, uploadDocument, deleteDocumentFile } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
-const FOLDERS = ['证件类', '交通票据', '酒店住宿', '会议资料', '发票报销']
-
 const fileIcon = (type: string) => {
   if (['.pdf'].includes(type)) return <FilePdfOutlined style={{ color: '#ef4444', fontSize: 20 }} />
   if (['.png', '.jpg', '.jpeg', '.gif'].includes(type)) return <FileImageOutlined style={{ color: '#3b82f6', fontSize: 20 }} />
@@ -16,7 +14,6 @@ const fileIcon = (type: string) => {
 
 export default function DocumentLibrary() {
   const [files, setFiles] = useState<any[]>([])
-  const [selectedFolder, setSelectedFolder] = useState('证件类')
   const [tripFilter, setTripFilter] = useState('全部')
   const [search, setSearch] = useState('')
   const user = useAuthStore((s) => s.user)
@@ -25,17 +22,16 @@ export default function DocumentLibrary() {
   const isMobile = !screens.md
 
   const loadFiles = async () => {
-    const res = await getDocumentFiles(selectedFolder, tripFilter)
+    const res = await getDocumentFiles(undefined, tripFilter)
     setFiles(res.data)
   }
 
-  useEffect(() => { loadFiles() }, [selectedFolder, tripFilter])
+  useEffect(() => { loadFiles() }, [tripFilter])
 
   const handleUpload = async (info: any) => {
     if (info.file.status === 'done') {
       const formData = new FormData()
       formData.append('file', info.file.originFileObj)
-      formData.append('folder_name', selectedFolder)
       formData.append('trip_filter', tripFilter)
       await uploadDocument(formData)
       message.success('上传成功')
@@ -72,7 +68,6 @@ export default function DocumentLibrary() {
           </Space>
         </div>
         <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap', overflowX: isMobile ? 'auto' : 'visible' }}>
-          <Segmented options={FOLDERS} value={selectedFolder} onChange={(v) => setSelectedFolder(v as string)} style={isMobile ? { whiteSpace: 'nowrap' } : {}} />
           <Segmented options={['全部', '香港差旅', '日本差旅', '国内差旅']} value={tripFilter} onChange={(v) => setTripFilter(v as string)} style={isMobile ? { whiteSpace: 'nowrap' } : {}} />
         </div>
       </Card>
