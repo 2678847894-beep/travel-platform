@@ -209,18 +209,23 @@ async def ai_import_preview(
             if 'heading' in style_name or '标题' in style_name:
                 continue
 
-            # 2. Filter out short pure-title paragraphs (≤6 chars, not starting with number/ordinal)
-            if len(text) <= 6 and not re.match(r'^[\d一二三四五六七八九十]+[\.\、\)）]', text):
+            # 2. Filter out short pure-title paragraphs (≤10 chars, not starting with number/ordinal)
+            if len(text) <= 10 and not re.match(r'^[\d一二三四五六七八九十]+[\.\、\)）]', text):
                 continue
 
-            # 3. Filter out descriptive/instructional paragraphs
-            #    - "至少包含..." scope descriptions
-            #    - "确保...当...时..." process instructions
+            # 3. Filter out section/category labels
+            #    - Ends with category keywords (检查, 时段, 房间, 事项, 清单, 流程, 准备 etc)
+            if re.search(r'(的检查|时段|事项|清单|流程)$', text):
+                continue
+            #    - Contains "每日" as a title prefix
+            if re.match(r'^每日', text) and len(text) <= 12:
+                continue
+
+            # 4. Filter out descriptive/instructional paragraphs
             if re.search(r'至少包含', text):
                 continue
             if re.search(r'确保.*当.*时', text):
                 continue
-            #    - Text is mainly descriptive without concrete action verbs
             action_verbs = r'[清理关闭准备打印检查通知删除整理搬运购买预订安排发送拨]'
             if re.search(r'至少|确保|当.*时', text) and not re.search(action_verbs, text):
                 continue
