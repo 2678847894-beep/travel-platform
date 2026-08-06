@@ -10,7 +10,7 @@ import {
 import { useAuthStore } from '../store/authStore'
 import { getAnimalAvatar } from '../utils/avatar'
 import { getTripTemplates, createTripTemplate } from '../services/api'
-import AiAssistant from './AIAssistant'
+import AiAssistant from './AiAssistant'
 
 const { Sider, Content, Header } = Layout
 
