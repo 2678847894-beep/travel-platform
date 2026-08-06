@@ -10,7 +10,6 @@ from app.models.sop import DailyTask
 from app.schemas.schemas import TaskOut, TaskCreate
 from pydantic import BaseModel
 import io
-import re
 
 router = APIRouter(prefix='/api/tasks', tags=['Tasks'])
 
@@ -171,11 +170,19 @@ async def ai_import_preview(
         headers = [str(c) if c is not None else f'Column{i+1}' for i, c in enumerate(rows[0])]
         idx_title, idx_date, idx_desc = _smart_detect_columns(headers)
 
+        current_trip_filter = ''
         for row in rows[1:]:
             vals = [str(c).strip() if c is not None else '' for c in row]
             title = vals[idx_title] if idx_title < len(vals) else ''
             if not title:
                 continue
+
+            # Detect group-header row: only title column has content → use as trip_filter
+            non_empty_count = sum(1 for v in vals if v)
+            if non_empty_count == 1:
+                current_trip_filter = title
+                continue
+
             task_d = today
             if idx_date is not None and idx_date < len(vals) and vals[idx_date]:
                 try:
@@ -191,82 +198,42 @@ async def ai_import_preview(
                 'task_date': task_d.isoformat(),
                 'end_date': (task_d + timedelta(days=365)).isoformat(),
                 'description': desc,
+                'trip_filter': current_trip_filter,
             })
 
     elif ext in ('docx', 'doc'):
         content = await file.read()
         import docx
-        from lxml import etree
         doc = docx.Document(io.BytesIO(content))
-        WML_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 
-        def _is_list_item(para) -> bool:
-            """Detect if paragraph is part of a numbered/bulleted list."""
-            numPr = para._element.find(f'{{{WML_NS}}}pPr/{{{WML_NS}}}numPr')
-            return numPr is not None
+        current_trip_filter = ''
 
-        def _is_bold(para) -> bool:
-            """Check if the paragraph's first run is bold (indicates a section header)."""
-            runs = para.runs
-            if not runs:
-                return False
-            return runs[0].bold or False
-
-        # Extract from paragraphs with structure-aware filtering
-        current_group = None  # Track current bold heading as group name
-
+        # Extract from paragraphs — detect bold headings as trip_filter groups
         for para in doc.paragraphs:
             text = para.text.strip()
             if not text:
                 continue
 
-            # 1. Word Heading style → skip (section titles)
-            style_name = (para.style.name or '').lower()
-            if 'heading' in style_name or '标题' in style_name:
+            # Detect if paragraph is bold → use as group title
+            is_bold = False
+            if para.runs:
+                bold_runs = [r for r in para.runs if r.text.strip()]
+                if bold_runs:
+                    is_bold = all(r.bold for r in bold_runs)
+
+            if is_bold:
+                current_trip_filter = text
                 continue
-
-            # 2. Bold paragraph → create a group; subsequent list items inherit trip_filter
-            if _is_bold(para):
-                current_group = text
-                continue
-
-            # 3. List items with numbering → ALWAYS keep, assign to current group
-            if _is_list_item(para):
-                cleaned = re.sub(r'^[\d一二三四五六七八九十]+[\.\、\)）]\s*', '', text).strip()
-                preview.append({
-                    'title': cleaned,
-                    'task_date': today.isoformat(),
-                    'end_date': (today + timedelta(days=365)).isoformat(),
-                    'description': '',
-                    'trip_filter': current_group or '全部',
-                })
-                continue
-
-            # 4. Non-list, non-heading, non-bold plain text:
-            #    Keep if it looks like a task (has action verbs or is a complete sentence)
-            #    Skip if it looks like a short label/title
-            has_action = bool(re.search(r'[清理关闭准备打印检查通知删除整理搬运购买预订安排发送拨倒扔拿取放装换开关补报修]', text))
-            is_short_label = len(text) <= 10 and not has_action
-
-            if is_short_label:
-                continue
-
-            # 5. Filter out pure scope descriptions (no action)
-            if re.search(r'至少包含', text) and not has_action:
-                continue
-
-            # Clean numbering if present
-            cleaned = re.sub(r'^[\d一二三四五六七八九十]+[\.\、\)）]\s*', '', text).strip()
 
             preview.append({
-                'title': cleaned,
+                'title': text,
                 'task_date': today.isoformat(),
                 'end_date': (today + timedelta(days=365)).isoformat(),
                 'description': '',
-                'trip_filter': current_group or '全部',
+                'trip_filter': current_trip_filter,
             })
 
-        # Extract from tables (keep structured data as-is)
+        # Extract from tables — inherit last trip_filter
         for table in doc.tables:
             for row in table.rows:
                 cells = [cell.text.strip() for cell in row.cells]
@@ -277,6 +244,7 @@ async def ai_import_preview(
                         'task_date': today.isoformat(),
                         'end_date': (today + timedelta(days=365)).isoformat(),
                         'description': '',
+                        'trip_filter': current_trip_filter,
                     })
 
     else:

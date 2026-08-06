@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   Card, Button, DatePicker, Modal, Form, Input, TimePicker, Select,
-  Checkbox, Segmented, message, Tag, Empty, Progress, Upload, Table, Grid,
+  Checkbox, Segmented, message, Tag, Empty, Progress, Upload, Grid,
 } from 'antd'
 import {
   PlusOutlined, DeleteOutlined, UploadOutlined, RobotOutlined,
@@ -10,11 +10,11 @@ import dayjs, { Dayjs } from 'dayjs'
 import {
   getTasks, createTask, toggleTask, deleteTask,
   aiImportTasksPreview, aiImportTasksConfirm,
+  getTripTemplates, createTripTemplate,
 } from '../services/api'
 import { useAuthStore } from '../store/authStore'
 
-const TRIP_GROUPS = ['香港差旅', '欧洲差旅', '日本差旅', '国内差旅']
-const TRIP_FILTERS = ['香港差旅', '欧洲差旅', '日本差旅', '国内差旅']
+const DEFAULT_TRIP_FILTERS = ['香港差旅', '欧洲差旅', '日本差旅', '国内差旅']
 
 export default function TodayPage() {
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs())
@@ -27,14 +27,60 @@ export default function TodayPage() {
   const screens = Grid.useBreakpoint()
   const isMobile = !screens.md
 
+  // Trip filters (dynamic, synced with sidebar templates)
+  const [tripFilters, setTripFilters] = useState<string[]>(DEFAULT_TRIP_FILTERS)
+  const [addFilterOpen, setAddFilterOpen] = useState(false)
+  const [newFilterName, setNewFilterName] = useState('')
+  const [addingFilter, setAddingFilter] = useState(false)
+
   // AI import states
   const [importing, setImporting] = useState(false)
   const [previewData, setPreviewData] = useState<any[]>([])
   const [previewOpen, setPreviewOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
-  const [previewTripFilter, setPreviewTripFilter] = useState(tripFilter)
-  const [previewTaskDate, setPreviewTaskDate] = useState<Dayjs>(selectedDate)
-  const [previewEndDate, setPreviewEndDate] = useState<Dayjs>(selectedDate.add(1, 'month'))
+
+  // Load trip filters from API
+  useEffect(() => {
+    const loadFilters = async () => {
+      try {
+        const res = await getTripTemplates()
+        if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+          const seen = new Set<string>()
+          const unique = res.data
+            .map((t: any) => t.name)
+            .filter((name: string) => {
+              if (seen.has(name)) return false
+              seen.add(name)
+              return true
+            })
+          if (unique.length > 0) setTripFilters(unique)
+        }
+      } catch { /* keep defaults */ }
+    }
+    loadFilters()
+  }, [])
+
+  // Add new trip filter
+  const handleAddFilter = async () => {
+    if (!newFilterName.trim()) {
+      message.warning('请输入目的地名称')
+      return
+    }
+    setAddingFilter(true)
+    try {
+      await createTripTemplate({ name: newFilterName.trim() })
+      message.success(`目的地「${newFilterName.trim()}」已添加`)
+      setTripFilters((prev) =>
+        prev.includes(newFilterName.trim()) ? prev : [...prev, newFilterName.trim()]
+      )
+      setNewFilterName('')
+      setAddFilterOpen(false)
+    } catch (err: any) {
+      message.error(err.response?.data?.detail || '添加失败')
+    } finally {
+      setAddingFilter(false)
+    }
+  }
 
   const loadTasks = async () => {
     try {
@@ -110,9 +156,6 @@ export default function TodayPage() {
         return
       }
       setPreviewData(data.map((item: any, idx: number) => ({ ...item, key: idx })))
-      setPreviewTripFilter(tripFilter)
-      setPreviewTaskDate(selectedDate)
-      setPreviewEndDate(selectedDate.add(1, 'month'))
       setPreviewOpen(true)
     } catch {
       message.error('导入失败，请检查文件格式')
@@ -124,13 +167,12 @@ export default function TodayPage() {
   const handlePreviewConfirm = async () => {
     setConfirming(true)
     try {
-      const taskDateStr = previewTaskDate.format('YYYY-MM-DD')
-      const endDateStr = previewEndDate.format('YYYY-MM-DD')
+      // Use the same task_date as selected date for all imported tasks
+      const dateStr = selectedDate.format('YYYY-MM-DD')
       const ts = previewData.map((item: any) => ({
         ...item,
-        task_date: taskDateStr,
-        end_date: endDateStr,
-        trip_filter: previewTripFilter,
+        task_date: dateStr,
+        end_date: dayjs(dateStr).add(1, 'year').format('YYYY-MM-DD'),
       }))
       await aiImportTasksConfirm({ tasks: ts })
       message.success(`成功导入 ${ts.length} 个任务`)
@@ -147,43 +189,6 @@ export default function TodayPage() {
   const completedCount = tasks.filter((t) => t.is_completed).length
   const totalCount = tasks.length
   const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
-
-  const previewColumns = [
-    {
-      title: '任务名称',
-      dataIndex: 'title',
-      render: (_: string, record: any, idx: number) => (
-        <Input
-          value={record.title}
-          onChange={(e) => {
-            const next = [...previewData]
-            next[idx] = { ...next[idx], title: e.target.value }
-            setPreviewData(next)
-          }}
-        />
-      ),
-    },
-    {
-      title: '日期',
-      dataIndex: 'task_date',
-      width: 140,
-      render: (v: string) => v || selectedDate.format('YYYY-MM-DD'),
-    },
-    {
-      title: '备注',
-      dataIndex: 'description',
-      render: (_: string, record: any, idx: number) => (
-        <Input
-          value={record.description}
-          onChange={(e) => {
-            const next = [...previewData]
-            next[idx] = { ...next[idx], description: e.target.value }
-            setPreviewData(next)
-          }}
-        />
-      ),
-    },
-  ]
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
@@ -210,8 +215,8 @@ export default function TodayPage() {
               <Upload
                 accept=".docx,.xlsx,.doc,.xls"
                 showUploadList={false}
-                beforeUpload={async (file) => {
-                  await handleAiImport(file)
+                beforeUpload={(file) => {
+                  handleAiImport(file)
                   return false
                 }}
               >
@@ -239,12 +244,21 @@ export default function TodayPage() {
         )}
 
         {/* Segmented Filter */}
-        <div style={{ overflowX: isMobile ? 'auto' : 'visible' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: isMobile ? 'auto' : 'visible' }}>
         <Segmented
-          options={TRIP_FILTERS}
+          options={tripFilters}
           value={tripFilter}
           onChange={(v) => setTripFilter(v as string)}
         />
+        {isAdmin && (
+          <Button
+            type="text"
+            size="small"
+            icon={<PlusOutlined />}
+            onClick={() => setAddFilterOpen(true)}
+            style={{ flexShrink: 0 }}
+          />
+        )}
         </div>
       </Card>
 
@@ -292,6 +306,9 @@ export default function TodayPage() {
                     {task.task_time && (
                       <Tag>{task.task_time}{task.end_time ? ` - ${task.end_time}` : ''}</Tag>
                     )}
+                    {task.end_date && (
+                      <Tag color="purple">至 {dayjs(task.end_date).format('MM/DD')}</Tag>
+                    )}
                     {task.location && <Tag color="orange">{task.location}</Tag>}
                     {isOverdue && !isCompleted && (
                       <Tag color="red">已过期</Tag>
@@ -334,7 +351,7 @@ export default function TodayPage() {
             <Input placeholder="例如：出发前往机场" />
           </Form.Item>
           <Form.Item name="trip_filter" label="分组">
-            <Select placeholder="选择差旅分组" allowClear options={TRIP_GROUPS.map((v) => ({ label: v, value: v }))} />
+            <Select placeholder="选择差旅分组" allowClear options={tripFilters.map((v) => ({ label: v, value: v }))} />
           </Form.Item>
           <div style={{ display: 'flex', gap: 16 }}>
             <Form.Item name="task_date" label="开始日期" style={{ flex: 1 }} rules={[{ required: true }]}>
@@ -364,8 +381,8 @@ export default function TodayPage() {
             <Upload
               accept=".docx,.xlsx,.doc,.xls"
               showUploadList={false}
-              beforeUpload={async (file) => {
-                await handleAiImport(file)
+              beforeUpload={(file) => {
+                handleAiImport(file)
                 return false
               }}
             >
@@ -394,40 +411,115 @@ export default function TodayPage() {
           </div>
         }
       >
-        <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 180px' }}>
-            <div style={{ marginBottom: 4, fontSize: 13, color: '#64748b' }}>目的地/分组</div>
-            <Select
-              value={previewTripFilter}
-              onChange={(v) => setPreviewTripFilter(v)}
-              style={{ width: '100%' }}
-              options={TRIP_GROUPS.map((v) => ({ label: v, value: v }))}
-            />
-          </div>
-          <div style={{ flex: '1 1 160px' }}>
-            <div style={{ marginBottom: 4, fontSize: 13, color: '#64748b' }}>开始日期</div>
-            <DatePicker
-              value={previewTaskDate}
-              onChange={(d) => setPreviewTaskDate(d || dayjs())}
-              style={{ width: '100%' }}
-            />
-          </div>
-          <div style={{ flex: '1 1 160px' }}>
-            <div style={{ marginBottom: 4, fontSize: 13, color: '#64748b' }}>结束日期</div>
-            <DatePicker
-              value={previewEndDate}
-              onChange={(d) => setPreviewEndDate(d || dayjs())}
-              style={{ width: '100%' }}
-            />
-          </div>
+        <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+          {(() => {
+            // Group previewData by trip_filter
+            const groups: { key: string; items: any[] }[] = []
+            const grouped: Record<string, any[]> = {}
+            const ungrouped: any[] = []
+
+            previewData.forEach((item: any, idx: number) => {
+              const gf = item.trip_filter
+              if (gf) {
+                if (!grouped[gf]) grouped[gf] = []
+                grouped[gf].push({ ...item, _idx: idx })
+              } else {
+                ungrouped.push({ ...item, _idx: idx })
+              }
+            })
+
+            // Preserve order of first appearance
+            const order: string[] = []
+            previewData.forEach((item: any) => {
+              const gf = item.trip_filter
+              if (gf && !order.includes(gf)) order.push(gf)
+            })
+
+            for (const k of order) {
+              if (grouped[k]) groups.push({ key: k, items: grouped[k] })
+            }
+            if (ungrouped.length > 0) groups.push({ key: '未分组', items: ungrouped })
+
+            if (groups.length === 0) {
+              return <Empty description="无预览数据" />
+            }
+
+            return groups.map((group) => (
+              <div key={group.key} style={{ marginBottom: 12 }}>
+                {/* Group header — read-only, visual separator */}
+                <div style={{
+                  padding: '6px 12px',
+                  background: '#f0f5ff',
+                  borderRadius: 6,
+                  fontWeight: 700,
+                  fontSize: 14,
+                  color: '#1d39c4',
+                  marginBottom: 4,
+                }}>
+                  {group.key}
+                </div>
+                {/* Group items */}
+                {group.items.map((item: any) => (
+                  <div key={item._idx} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '6px 12px',
+                    borderBottom: '1px solid #f0f0f0',
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <Input
+                        size="small"
+                        value={item.title}
+                        onChange={(e) => {
+                          const next = [...previewData]
+                          next[item._idx] = { ...next[item._idx], title: e.target.value }
+                          setPreviewData(next)
+                        }}
+                      />
+                    </div>
+                    <div style={{ width: 100, fontSize: 12, color: '#888', textAlign: 'center' }}>
+                      {item.task_date || selectedDate.format('YYYY-MM-DD')}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <Input
+                        size="small"
+                        placeholder="备注"
+                        value={item.description || ''}
+                        onChange={(e) => {
+                          const next = [...previewData]
+                          next[item._idx] = { ...next[item._idx], description: e.target.value }
+                          setPreviewData(next)
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))
+          })()}
         </div>
-        <Table
-          columns={previewColumns}
-          dataSource={previewData}
-          pagination={false}
-          size="small"
-          scroll={{ y: 400, x: isMobile ? 'max-content' : undefined }}
-        />
+      </Modal>
+
+      {/* Add Trip Filter Modal */}
+      <Modal
+        title="添加新目的地"
+        open={addFilterOpen}
+        onCancel={() => { setAddFilterOpen(false); setNewFilterName('') }}
+        onOk={handleAddFilter}
+        confirmLoading={addingFilter}
+        okText="添加"
+        cancelText="取消"
+      >
+        <div style={{ marginTop: 8 }}>
+          <Input
+            placeholder="输入目的地名称，例如：纽约差旅"
+            value={newFilterName}
+            onChange={(e) => setNewFilterName(e.target.value)}
+            onPressEnter={handleAddFilter}
+            autoFocus
+          />
+        </div>
       </Modal>
     </div>
   )

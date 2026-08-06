@@ -10,7 +10,7 @@ import {
 import { useAuthStore } from '../store/authStore'
 import { getAnimalAvatar } from '../utils/avatar'
 import { getTripTemplates, createTripTemplate } from '../services/api'
-import AiAssistant from './AiAssistant'
+import AiAssistant from './AIAssistant'
 
 const { Sider, Content, Header } = Layout
 
@@ -140,7 +140,15 @@ export default function MainLayout() {
     try {
       const res = await getTripTemplates()
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-        setTemplates(res.data)
+        // 按名称去重，避免 API 返回重复数据导致侧边栏列表重复
+        const seen = new Set<string>()
+        const unique = res.data.filter((t: any) => {
+          const key = t.name
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
+        setTemplates(unique.length > 0 ? unique : DEFAULT_TEMPLATES)
       } else {
         setTemplates(DEFAULT_TEMPLATES)
       }
