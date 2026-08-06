@@ -10,12 +10,11 @@ import {
 import { useAuthStore } from '../store/authStore'
 import { getAnimalAvatar } from '../utils/avatar'
 import AiAssistant from './AiAssistant'
-import ProfileModal from './ProfileModal'
 
 const { Sider, Content, Header } = Layout
 
 // 侧边栏内容组件（桌面端 Sider 和移动端 Drawer 共用）
-function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logout, onProfileClick }: any) {
+function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logout }: any) {
   const animal = user ? getAnimalAvatar(user.id) : null
 
   return (
@@ -24,7 +23,7 @@ function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logo
       <div
         className="sidebar-profile-card"
         style={collapsed ? { padding: '12px 8px' } : {}}
-        onClick={onProfileClick}
+        onClick={() => navigate('/chalv/profile')}
       >
         {collapsed ? (
           <div className="sidebar-profile-collapsed">
@@ -115,7 +114,6 @@ export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [aiOpen, setAiOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [profileOpen, setProfileOpen] = useState(false)
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
@@ -171,7 +169,7 @@ export default function MainLayout() {
           className="glass-dark"
           style={{ overflow: 'auto', height: '100vh', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}
         >
-          <SidebarContent collapsed={collapsed} user={user} menuItems={menuItems} currentKey={currentKey} navigate={navigate} logout={logout} onProfileClick={() => setProfileOpen(true)} />
+          <SidebarContent collapsed={collapsed} user={user} menuItems={menuItems} currentKey={currentKey} navigate={navigate} logout={logout} />
         </Sider>
       )}
       {isMobile && (
@@ -184,7 +182,7 @@ export default function MainLayout() {
           bodyStyle={{ padding: 0, background: 'transparent' }}
           headerStyle={{ display: 'none' }}
         >
-          <SidebarContent collapsed={false} user={user} menuItems={menuItems} currentKey={currentKey} navigate={(k: string) => { navigate(k); setDrawerOpen(false) }} logout={() => { logout(); setDrawerOpen(false) }} onProfileClick={() => { setProfileOpen(true); setDrawerOpen(false) }} />
+          <SidebarContent collapsed={false} user={user} menuItems={menuItems} currentKey={currentKey} navigate={(k: string) => { navigate(k); setDrawerOpen(false) }} logout={() => { logout(); setDrawerOpen(false) }} />
         </Drawer>
       )}
 
@@ -233,9 +231,6 @@ export default function MainLayout() {
 
       {/* AI聊天面板 */}
       {aiOpen && <AiAssistant onClose={() => setAiOpen(false)} />}
-
-      {/* 个人资料弹窗 */}
-      <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
     </Layout>
   )
 }

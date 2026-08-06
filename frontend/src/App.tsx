@@ -18,6 +18,7 @@ import ChecklistPage from './pages/ChecklistPage'
 import SopPage from './pages/SopPage'
 import SopDetailPage from './pages/SopDetailPage'
 import DocumentLibrary from './pages/DocumentLibrary'
+import ProfilePage from './pages/ProfilePage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   // 临时关闭登录验证 - 开发中
@@ -50,6 +51,7 @@ export default function App() {
         <Route path="sop" element={<SopPage />} />
         <Route path="sop/:id" element={<SopDetailPage />} />
         <Route path="documents" element={<DocumentLibrary />} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
     </Routes>
   )
