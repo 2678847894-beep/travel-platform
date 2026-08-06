@@ -8,6 +8,7 @@ from sqlalchemy import text
 from app.core.database import engine, Base
 from app.core.config import settings
 from app.api import auth, sop, tasks, documents, checklist, trips, ai
+from app.api.trips import template_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -30,6 +31,23 @@ with engine.connect() as conn:
     ))
     conn.execute(text(
         "ALTER TABLE sop_documents ADD COLUMN IF NOT EXISTS trip_filter VARCHAR(50) DEFAULT '香港差旅'"
+    ))
+    conn.execute(text(
+        "CREATE TABLE IF NOT EXISTS trip_templates ("
+        "  id SERIAL PRIMARY KEY,"
+        "  name VARCHAR(100) NOT NULL,"
+        "  icon VARCHAR(10) DEFAULT '🌍',"
+        "  sort_order INTEGER DEFAULT 0,"
+        "  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()"
+        ")"
+    ))
+    conn.execute(text(
+        "INSERT INTO trip_templates (name, icon, sort_order) VALUES "
+        "  ('香港差旅', '🌏', 0),"
+        "  ('欧洲差旅', '🌍', 1),"
+        "  ('日本差旅', '🗾', 2),"
+        "  ('国内差旅', '🏠', 3)"
+        "  ON CONFLICT DO NOTHING"
     ))
     conn.commit()
 
@@ -60,6 +78,7 @@ app.include_router(tasks.router)
 app.include_router(documents.router)
 app.include_router(checklist.router)
 app.include_router(trips.router)
+app.include_router(template_router)
 app.include_router(ai.router)
 
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)

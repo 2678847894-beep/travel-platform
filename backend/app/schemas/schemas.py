@@ -171,6 +171,22 @@ class TripCreate(BaseModel):
     trip_date: Optional[date] = None
 
 
+# ── 行程模板 ──
+class TripTemplateOut(BaseModel):
+    id: int
+    name: str
+    icon: str = "🌍"
+    sort_order: int = 0
+    created_at: Optional[datetime] = None
+    class Config:
+        from_attributes = True
+
+class TripTemplateCreate(BaseModel):
+    name: str
+    icon: str = "🌍"
+    sort_order: int = 0
+
+
 # ── AI 问答 ──
 class AiAskRequest(BaseModel):
     question: str

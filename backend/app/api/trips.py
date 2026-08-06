@@ -5,8 +5,8 @@ from typing import List
 from app.core.database import get_db
 from app.core.auth import get_current_user, require_admin
 from app.models.user import User
-from app.models.sop import Trip, TripItem, ChecklistItem
-from app.schemas.schemas import TripOut, TripCreate, ChecklistItemOut
+from app.models.sop import Trip, TripItem, ChecklistItem, TripTemplate
+from app.schemas.schemas import TripOut, TripCreate, ChecklistItemOut, TripTemplateOut, TripTemplateCreate
 
 router = APIRouter(prefix='/api/trips', tags=['Trips'])
 
@@ -105,3 +105,39 @@ def toggle_trip_item(trip_id: int, item_id: int, db: Session = Depends(get_db), 
         db.add(ti)
     db.commit()
     return {'ok': True, 'is_prepared': ti.is_prepared}
+
+
+# ── Trip Templates ──
+template_router = APIRouter(prefix='/api/trip-templates', tags=['TripTemplates'])
+
+
+@template_router.get('', response_model=List[TripTemplateOut])
+def list_trip_templates(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+    return db.query(TripTemplate).order_by(TripTemplate.sort_order).all()
+
+
+@template_router.post('', response_model=TripTemplateOut)
+def create_trip_template(
+    body: TripTemplateCreate,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin)
+):
+    template = TripTemplate(**body.model_dump())
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+    return template
+
+
+@template_router.delete('/{template_id}')
+def delete_trip_template(
+    template_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin)
+):
+    template = db.query(TripTemplate).filter(TripTemplate.id == template_id).first()
+    if not template:
+        raise HTTPException(status_code=404)
+    db.delete(template)
+    db.commit()
+    return {'ok': True}

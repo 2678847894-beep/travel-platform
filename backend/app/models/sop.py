@@ -108,3 +108,12 @@ class TripItem(Base):
     trip_id = Column(Integer, ForeignKey("trips.id", ondelete="CASCADE"), nullable=False)
     checklist_item_id = Column(Integer, ForeignKey("checklist_items.id", ondelete="CASCADE"), nullable=False)
     is_prepared = Column(Boolean, default=False)
+
+
+class TripTemplate(Base):
+    __tablename__ = "trip_templates"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    icon = Column(String(10), default="🌍")
+    sort_order = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

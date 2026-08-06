@@ -1,20 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Input, Tooltip, Drawer, Grid, Button } from 'antd'
+import { Layout, Menu, Input, Tooltip, Drawer, Grid, Button, Modal, message } from 'antd'
 import {
   MenuFoldOutlined, MenuUnfoldOutlined, SearchOutlined,
   CheckSquareOutlined, InboxOutlined, FileTextOutlined,
   FolderOutlined, SettingOutlined,
-  GlobalOutlined, HomeOutlined, PlusOutlined, RobotOutlined, CodeOutlined
+  GlobalOutlined, PlusOutlined, RobotOutlined, CodeOutlined
 } from '@ant-design/icons'
 import { useAuthStore } from '../store/authStore'
 import { getAnimalAvatar } from '../utils/avatar'
+import { getTripTemplates, createTripTemplate } from '../services/api'
 import AiAssistant from './AiAssistant'
 
 const { Sider, Content, Header } = Layout
 
 // 侧边栏内容组件（桌面端 Sider 和移动端 Drawer 共用）
-function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logout }: any) {
+function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logout, onAddTemplate }: any) {
   const animal = user ? getAnimalAvatar(user.id) : null
 
   return (
@@ -70,13 +71,30 @@ function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logo
               label: <span style={{ color: '#4A7C59', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>{item.label}</span>,
             }
           }
+          if (item.type === 'button') {
+            return {
+              key: item.key,
+              icon: item.icon,
+              label: collapsed ? null : (
+                <span
+                  onClick={(e) => { e.stopPropagation(); onAddTemplate() }}
+                  style={{ color: '#4A7C59', cursor: 'pointer' }}
+                >
+                  {item.label}
+                </span>
+              ),
+            }
+          }
           return {
             key: item.key,
             icon: item.icon,
             label: collapsed ? null : <span>{item.label}</span>,
           }
         })}
-        onClick={({ key }) => navigate('/chalv' + key)}
+        onClick={({ key }) => {
+          if (key === '__add_template__') return
+          navigate('/chalv' + key)
+        }}
       />
       <div style={{ position: 'absolute', bottom: 40, width: '100%', padding: '0 16px' }}>
         <a href="https://travel-platform-teo8.onrender.com/docs" target="_blank" rel="noopener noreferrer"
@@ -96,29 +114,67 @@ function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logo
   )
 }
 
-const menuItems = [
-  { key: '/tasks', icon: <CheckSquareOutlined />, label: '每日任务' },
-  { key: '/inbox', icon: <InboxOutlined />, label: '新增需求确认处' },
-  { type: 'divider' as const, label: '目的地' },
-  { key: '/checklist?template=香港差旅', icon: <GlobalOutlined />, label: '香港差旅' },
-  { key: '/checklist?template=欧洲差旅', icon: <GlobalOutlined />, label: '欧洲差旅' },
-  { key: '/checklist?template=日本差旅', icon: <GlobalOutlined />, label: '日本差旅' },
-  { key: '/checklist?template=国内差旅', icon: <HomeOutlined />, label: '国内差旅' },
-  { key: '/checklist?template=new', icon: <PlusOutlined />, label: '添加新清单' },
-  { type: 'divider' as const, label: '储蓄库' },
-  { key: '/sop', icon: <FileTextOutlined />, label: 'SOP知识库' },
-  { key: '/documents', icon: <FolderOutlined />, label: '文档库' },
-]
-
 export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [aiOpen, setAiOpen] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [templates, setTemplates] = useState<any[]>([])
+  const [addModalOpen, setAddModalOpen] = useState(false)
+  const [newTemplateName, setNewTemplateName] = useState('')
+  const [addingLoading, setAddingLoading] = useState(false)
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
   const screens = Grid.useBreakpoint()
   const isMobile = !screens.md
+
+  // 加载目的地模板
+  const loadTemplates = useCallback(async () => {
+    try {
+      const res = await getTripTemplates()
+      setTemplates(res.data)
+    } catch {
+      setTemplates([])
+    }
+  }, [])
+
+  useEffect(() => { loadTemplates() }, [loadTemplates])
+
+  // 动态构建菜单
+  const menuItems = [
+    { key: '/tasks', icon: <CheckSquareOutlined />, label: '每日任务' },
+    { key: '/inbox', icon: <InboxOutlined />, label: '新增需求确认处' },
+    { type: 'divider' as const, label: '目的地' },
+    ...templates.map((t) => ({
+      key: `/checklist?template=${encodeURIComponent(t.name)}`,
+      icon: <GlobalOutlined />,
+      label: t.name,
+    })),
+    { key: '__add_template__', icon: <PlusOutlined />, label: '添加新清单', type: 'button' as const },
+    { type: 'divider' as const, label: '储蓄库' },
+    { key: '/sop', icon: <FileTextOutlined />, label: 'SOP知识库' },
+    { key: '/documents', icon: <FolderOutlined />, label: '文档库' },
+  ]
+
+  // 添加新目的地
+  const handleAddTemplate = async () => {
+    if (!newTemplateName.trim()) {
+      message.warning('请输入目的地名称')
+      return
+    }
+    setAddingLoading(true)
+    try {
+      await createTripTemplate({ name: newTemplateName.trim() })
+      message.success(`目的地「${newTemplateName.trim()}」已添加`)
+      setNewTemplateName('')
+      setAddModalOpen(false)
+      loadTemplates()
+    } catch (err: any) {
+      message.error(err.response?.data?.detail || '添加失败')
+    } finally {
+      setAddingLoading(false)
+    }
+  }
 
   // AI 拖拽
   const [fabPos, setFabPos] = useState({ x: 0, y: 0 })
@@ -169,7 +225,15 @@ export default function MainLayout() {
           className="glass-dark"
           style={{ overflow: 'auto', height: '100vh', position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 10 }}
         >
-          <SidebarContent collapsed={collapsed} user={user} menuItems={menuItems} currentKey={currentKey} navigate={navigate} logout={logout} />
+          <SidebarContent
+            collapsed={collapsed}
+            user={user}
+            menuItems={menuItems}
+            currentKey={currentKey}
+            navigate={navigate}
+            logout={logout}
+            onAddTemplate={() => setAddModalOpen(true)}
+          />
         </Sider>
       )}
       {isMobile && (
@@ -182,7 +246,15 @@ export default function MainLayout() {
           bodyStyle={{ padding: 0, background: 'transparent' }}
           headerStyle={{ display: 'none' }}
         >
-          <SidebarContent collapsed={false} user={user} menuItems={menuItems} currentKey={currentKey} navigate={(k: string) => { navigate(k); setDrawerOpen(false) }} logout={() => { logout(); setDrawerOpen(false) }} />
+          <SidebarContent
+            collapsed={false}
+            user={user}
+            menuItems={menuItems}
+            currentKey={currentKey}
+            navigate={(k: string) => { navigate(k); setDrawerOpen(false) }}
+            logout={() => { logout(); setDrawerOpen(false) }}
+            onAddTemplate={() => { setDrawerOpen(false); setAddModalOpen(true) }}
+          />
         </Drawer>
       )}
 
@@ -231,6 +303,27 @@ export default function MainLayout() {
 
       {/* AI聊天面板 */}
       {aiOpen && <AiAssistant onClose={() => setAiOpen(false)} />}
+
+      {/* 添加新目的地弹窗 */}
+      <Modal
+        title="添加新目的地"
+        open={addModalOpen}
+        onCancel={() => { setAddModalOpen(false); setNewTemplateName('') }}
+        onOk={handleAddTemplate}
+        confirmLoading={addingLoading}
+        okText="添加"
+        cancelText="取消"
+      >
+        <div style={{ marginTop: 8 }}>
+          <Input
+            placeholder="输入目的地名称，例如：纽约差旅"
+            value={newTemplateName}
+            onChange={(e) => setNewTemplateName(e.target.value)}
+            onPressEnter={handleAddTemplate}
+            autoFocus
+          />
+        </div>
+      </Modal>
     </Layout>
   )
 }

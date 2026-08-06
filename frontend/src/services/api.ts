@@ -112,3 +112,9 @@ export const getTripItems = (tripId: number, filterType = 'all', pool?: string) 
 export const toggleTripItem = (tripId: number, itemId: number) =>
   api.post(`/trips/${tripId}/items/${itemId}/toggle`)
 
+// Trip Templates
+export const getTripTemplates = () => api.get('/trip-templates')
+export const createTripTemplate = (data: { name: string; icon?: string; sort_order?: number }) =>
+  api.post('/trip-templates', data)
+export const deleteTripTemplate = (id: number) => api.delete(`/trip-templates/${id}`)
+
