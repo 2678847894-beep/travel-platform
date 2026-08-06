@@ -292,9 +292,6 @@ export default function TodayPage() {
                     {task.task_time && (
                       <Tag>{task.task_time}{task.end_time ? ` - ${task.end_time}` : ''}</Tag>
                     )}
-                    {task.end_date && (
-                      <Tag color="purple">至 {dayjs(task.end_date).format('MM/DD')}</Tag>
-                    )}
                     {task.location && <Tag color="orange">{task.location}</Tag>}
                     {isOverdue && !isCompleted && (
                       <Tag color="red">已过期</Tag>

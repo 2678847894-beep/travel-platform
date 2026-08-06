@@ -10,6 +10,7 @@ from app.models.sop import DailyTask
 from app.schemas.schemas import TaskOut, TaskCreate
 from pydantic import BaseModel
 import io
+import re
 
 router = APIRouter(prefix='/api/tasks', tags=['Tasks'])
 
@@ -197,18 +198,44 @@ async def ai_import_preview(
         import docx
         doc = docx.Document(io.BytesIO(content))
 
-        # Extract from paragraphs
+        # Extract from paragraphs with AI filtering
         for para in doc.paragraphs:
             text = para.text.strip()
-            if text:
-                preview.append({
-                    'title': text,
-                    'task_date': today.isoformat(),
-                    'end_date': (today + timedelta(days=365)).isoformat(),
-                    'description': '',
-                })
+            if not text:
+                continue
 
-        # Extract from tables
+            # 1. Filter out Word Heading style paragraphs
+            style_name = (para.style.name or '').lower()
+            if 'heading' in style_name or '标题' in style_name:
+                continue
+
+            # 2. Filter out short pure-title paragraphs (≤6 chars, not starting with number/ordinal)
+            if len(text) <= 6 and not re.match(r'^[\d一二三四五六七八九十]+[\.\、\)）]', text):
+                continue
+
+            # 3. Filter out descriptive/instructional paragraphs
+            #    - "至少包含..." scope descriptions
+            #    - "确保...当...时..." process instructions
+            if re.search(r'至少包含', text):
+                continue
+            if re.search(r'确保.*当.*时', text):
+                continue
+            #    - Text is mainly descriptive without concrete action verbs
+            action_verbs = r'[清理关闭准备打印检查通知删除整理搬运购买预订安排发送拨]'
+            if re.search(r'至少|确保|当.*时', text) and not re.search(action_verbs, text):
+                continue
+
+            # 4. Clean numbered list prefix (e.g. "1. 关闭DJ房间的勿扰" → "关闭DJ房间的勿扰")
+            cleaned = re.sub(r'^[\d一二三四五六七八九十]+[\.\、\)）]\s*', '', text).strip()
+
+            preview.append({
+                'title': cleaned,
+                'task_date': today.isoformat(),
+                'end_date': (today + timedelta(days=365)).isoformat(),
+                'description': '',
+            })
+
+        # Extract from tables (keep structured data as-is)
         for table in doc.tables:
             for row in table.rows:
                 cells = [cell.text.strip() for cell in row.cells]
