@@ -22,6 +22,8 @@ export default function SopPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importModal, setImportModal] = useState(false)
   const [importFolderId, setImportFolderId] = useState<number | null>(null)
+  const [renameModal, setRenameModal] = useState(false)
+  const [renameFolder, setRenameFolder] = useState<any>(null)
 
   const loadData = async () => {
     const [fRes, dRes] = await Promise.all([
