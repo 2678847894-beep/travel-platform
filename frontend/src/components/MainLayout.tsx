@@ -114,6 +114,13 @@ function SidebarContent({ collapsed, user, menuItems, currentKey, navigate, logo
   )
 }
 
+const DEFAULT_TEMPLATES = [
+  { name: '香港差旅🌏' },
+  { name: '欧洲差旅🌍' },
+  { name: '日本差旅🗾' },
+  { name: '国内差旅🏠' },
+]
+
 export default function MainLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [aiOpen, setAiOpen] = useState(false)
@@ -132,9 +139,13 @@ export default function MainLayout() {
   const loadTemplates = useCallback(async () => {
     try {
       const res = await getTripTemplates()
-      setTemplates(res.data)
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        setTemplates(res.data)
+      } else {
+        setTemplates(DEFAULT_TEMPLATES)
+      }
     } catch {
-      setTemplates([])
+      setTemplates(DEFAULT_TEMPLATES)
     }
   }, [])
 
