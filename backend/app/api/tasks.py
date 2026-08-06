@@ -215,11 +215,12 @@ async def ai_import_preview(
                 continue
 
             # Detect if paragraph is bold → use as group title
+            # Check first non-empty run's bold state (more reliable than all runs)
             is_bold = False
             if para.runs:
-                bold_runs = [r for r in para.runs if r.text.strip()]
-                if bold_runs:
-                    is_bold = all(r.bold for r in bold_runs)
+                first_text_run = next((r for r in para.runs if r.text.strip()), None)
+                if first_text_run and first_text_run.bold:
+                    is_bold = True
 
             if is_bold:
                 current_trip_filter = text
