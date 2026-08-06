@@ -32,6 +32,9 @@ export default function TodayPage() {
   const [previewData, setPreviewData] = useState<any[]>([])
   const [previewOpen, setPreviewOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  const [previewTripFilter, setPreviewTripFilter] = useState(tripFilter)
+  const [previewTaskDate, setPreviewTaskDate] = useState<Dayjs>(selectedDate)
+  const [previewEndDate, setPreviewEndDate] = useState<Dayjs>(selectedDate.add(1, 'month'))
 
   const loadTasks = async () => {
     try {
@@ -107,6 +110,9 @@ export default function TodayPage() {
         return
       }
       setPreviewData(data.map((item: any, idx: number) => ({ ...item, key: idx })))
+      setPreviewTripFilter(tripFilter)
+      setPreviewTaskDate(selectedDate)
+      setPreviewEndDate(selectedDate.add(1, 'month'))
       setPreviewOpen(true)
     } catch {
       message.error('导入失败，请检查文件格式')
@@ -118,12 +124,13 @@ export default function TodayPage() {
   const handlePreviewConfirm = async () => {
     setConfirming(true)
     try {
-      // Use the same task_date as selected date for all imported tasks
-      const dateStr = selectedDate.format('YYYY-MM-DD')
+      const taskDateStr = previewTaskDate.format('YYYY-MM-DD')
+      const endDateStr = previewEndDate.format('YYYY-MM-DD')
       const ts = previewData.map((item: any) => ({
         ...item,
-        task_date: dateStr,
-        end_date: dayjs(dateStr).add(1, 'year').format('YYYY-MM-DD'),
+        task_date: taskDateStr,
+        end_date: endDateStr,
+        trip_filter: previewTripFilter,
       }))
       await aiImportTasksConfirm({ tasks: ts })
       message.success(`成功导入 ${ts.length} 个任务`)
@@ -203,8 +210,8 @@ export default function TodayPage() {
               <Upload
                 accept=".docx,.xlsx,.doc,.xls"
                 showUploadList={false}
-                beforeUpload={(file) => {
-                  handleAiImport(file)
+                beforeUpload={async (file) => {
+                  await handleAiImport(file)
                   return false
                 }}
               >
@@ -360,8 +367,8 @@ export default function TodayPage() {
             <Upload
               accept=".docx,.xlsx,.doc,.xls"
               showUploadList={false}
-              beforeUpload={(file) => {
-                handleAiImport(file)
+              beforeUpload={async (file) => {
+                await handleAiImport(file)
                 return false
               }}
             >
@@ -390,6 +397,33 @@ export default function TodayPage() {
           </div>
         }
       >
+        <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 180px' }}>
+            <div style={{ marginBottom: 4, fontSize: 13, color: '#64748b' }}>目的地/分组</div>
+            <Select
+              value={previewTripFilter}
+              onChange={(v) => setPreviewTripFilter(v)}
+              style={{ width: '100%' }}
+              options={TRIP_GROUPS.map((v) => ({ label: v, value: v }))}
+            />
+          </div>
+          <div style={{ flex: '1 1 160px' }}>
+            <div style={{ marginBottom: 4, fontSize: 13, color: '#64748b' }}>开始日期</div>
+            <DatePicker
+              value={previewTaskDate}
+              onChange={(d) => setPreviewTaskDate(d || dayjs())}
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div style={{ flex: '1 1 160px' }}>
+            <div style={{ marginBottom: 4, fontSize: 13, color: '#64748b' }}>结束日期</div>
+            <DatePicker
+              value={previewEndDate}
+              onChange={(d) => setPreviewEndDate(d || dayjs())}
+              style={{ width: '100%' }}
+            />
+          </div>
+        </div>
         <Table
           columns={previewColumns}
           dataSource={previewData}
