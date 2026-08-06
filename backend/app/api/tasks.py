@@ -196,41 +196,62 @@ async def ai_import_preview(
     elif ext in ('docx', 'doc'):
         content = await file.read()
         import docx
+        from lxml import etree
         doc = docx.Document(io.BytesIO(content))
+        WML_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 
-        # Extract from paragraphs with AI filtering
+        def _is_list_item(para) -> bool:
+            """Detect if paragraph is part of a numbered/bulleted list."""
+            numPr = para._element.find(f'{{{WML_NS}}}pPr/{{{WML_NS}}}numPr')
+            return numPr is not None
+
+        def _is_bold(para) -> bool:
+            """Check if the paragraph's first run is bold (indicates a section header)."""
+            runs = para.runs
+            if not runs:
+                return False
+            return runs[0].bold or False
+
+        # Extract from paragraphs with structure-aware filtering
         for para in doc.paragraphs:
             text = para.text.strip()
             if not text:
                 continue
 
-            # 1. Filter out Word Heading style paragraphs
+            # 1. Word Heading style → skip (section titles)
             style_name = (para.style.name or '').lower()
             if 'heading' in style_name or '标题' in style_name:
                 continue
 
-            # 2. Filter out short pure-title paragraphs (≤10 chars, not starting with number/ordinal)
-            if len(text) <= 10 and not re.match(r'^[\d一二三四五六七八九十]+[\.\、\)）]', text):
+            # 2. List items with numbering → ALWAYS keep (these are tasks)
+            if _is_list_item(para):
+                cleaned = re.sub(r'^[\d一二三四五六七八九十]+[\.\、\)）]\s*', '', text).strip()
+                preview.append({
+                    'title': cleaned,
+                    'task_date': today.isoformat(),
+                    'end_date': (today + timedelta(days=365)).isoformat(),
+                    'description': '',
+                })
                 continue
 
-            # 3. Filter out section/category labels
-            #    - Ends with category keywords (检查, 时段, 房间, 事项, 清单, 流程, 准备 etc)
-            if re.search(r'(的检查|时段|事项|清单|流程)$', text):
-                continue
-            #    - Contains "每日" as a title prefix
-            if re.match(r'^每日', text) and len(text) <= 12:
+            # 3. Bold plain text → likely section header, skip
+            if _is_bold(para):
                 continue
 
-            # 4. Filter out descriptive/instructional paragraphs
-            if re.search(r'至少包含', text):
-                continue
-            if re.search(r'确保.*当.*时', text):
-                continue
-            action_verbs = r'[清理关闭准备打印检查通知删除整理搬运购买预订安排发送拨]'
-            if re.search(r'至少|确保|当.*时', text) and not re.search(action_verbs, text):
+            # 4. Non-list, non-heading, non-bold plain text:
+            #    Keep if it looks like a task (has action verbs or is a complete sentence)
+            #    Skip if it looks like a short label/title
+            has_action = bool(re.search(r'[清理关闭准备打印检查通知删除整理搬运购买预订安排发送拨倒扔拿取放装换开关补报修]', text))
+            is_short_label = len(text) <= 10 and not has_action
+
+            if is_short_label:
                 continue
 
-            # 4. Clean numbered list prefix (e.g. "1. 关闭DJ房间的勿扰" → "关闭DJ房间的勿扰")
+            # 5. Filter out pure scope descriptions (no action)
+            if re.search(r'至少包含', text) and not has_action:
+                continue
+
+            # Clean numbering if present
             cleaned = re.sub(r'^[\d一二三四五六七八九十]+[\.\、\)）]\s*', '', text).strip()
 
             preview.append({
