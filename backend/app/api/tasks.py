@@ -30,6 +30,7 @@ def _build_task_out(task: DailyTask, query_date: date) -> TaskOut:
         location=task.location or "",
         description=task.description or "",
         trip_filter=task.trip_filter or "全部",
+        category=task.category or "",
         is_completed=is_completed_today,
         is_overdue=is_overdue,
         completed_date=task.completed_date,
@@ -198,7 +199,8 @@ async def ai_import_preview(
                 'task_date': task_d.isoformat(),
                 'end_date': (task_d + timedelta(days=365)).isoformat(),
                 'description': desc,
-                'trip_filter': current_trip_filter,
+                'category': current_trip_filter,
+                'trip_filter': '',
                 'task_time': '',
                 'end_time': '',
                 'location': '',
@@ -250,7 +252,8 @@ async def ai_import_preview(
                 'task_date': today.isoformat(),
                 'end_date': (today + timedelta(days=365)).isoformat(),
                 'description': '',
-                'trip_filter': current_trip_filter,
+                'category': current_trip_filter,
+                'trip_filter': '',
                 'task_time': '',
                 'end_time': '',
                 'location': '',
@@ -267,7 +270,8 @@ async def ai_import_preview(
                         'task_date': today.isoformat(),
                         'end_date': (today + timedelta(days=365)).isoformat(),
                         'description': '',
-                        'trip_filter': current_trip_filter,
+                        'category': current_trip_filter,
+                        'trip_filter': '',
                         'task_time': '',
                         'end_time': '',
                         'location': '',
@@ -318,8 +322,9 @@ def ai_import_confirm(
             end_dt = datetime.combine(td_only + timedelta(days=365), datetime.min.time())
 
         trip_filter_val = item.get('trip_filter', '全部') or '全部'
+        category_val = item.get('category', '') or ''
         desc_val = item.get('description', '') or ''
-        print(f"[ai_import_confirm] TASK[{i}] title='{title}' trip_filter='{trip_filter_val}' task_date='{task_date_str}' desc='{desc_val[:80]}'")
+        print(f"[ai_import_confirm] TASK[{i}] title='{title}' trip_filter='{trip_filter_val}' category='{category_val}' task_date='{task_date_str}' desc='{desc_val[:80]}'")
 
         task = DailyTask(
             title=title,
@@ -327,6 +332,7 @@ def ai_import_confirm(
             end_date=end_dt,
             description=desc_val,
             trip_filter=trip_filter_val,
+            category=category_val,
             task_time=item.get('task_time', '') or '',
             end_time=item.get('end_time', '') or '',
             location=item.get('location', '') or '',

@@ -51,6 +51,7 @@ class DailyTask(Base):
     location = Column(String(200), default="")
     description = Column(Text, default="")
     trip_filter = Column(String(50), default="全部")
+    category = Column(String(50), default="")
     is_completed = Column(Boolean, default=False)
     completed_date = Column(Date, nullable=True)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)

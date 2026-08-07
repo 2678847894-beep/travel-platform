@@ -39,6 +39,7 @@ export default function TodayPage() {
   const [previewOpen, setPreviewOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [unifiedTripFilter, setUnifiedTripFilter] = useState('全部')
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -180,29 +181,21 @@ export default function TodayPage() {
   const handlePreviewConfirm = async () => {
     setConfirming(true)
     try {
-      // Use the same task_date as selected date for all imported tasks
       const dateStr = selectedDate.format('YYYY-MM-DD')
       const ts = previewData.map((item: any) => ({
         ...item,
         task_date: dateStr,
         end_date: dayjs(dateStr).add(1, 'year').format('YYYY-MM-DD'),
+        trip_filter: unifiedTripFilter,
       }))
       const res = await aiImportTasksConfirm({ tasks: ts })
       const importedCount = res.data?.count || ts.length
       message.success(`已成功导入 ${importedCount} 条任务`)
       setPreviewOpen(false)
       setPreviewData([])
-      // Switch the active filter to the imported group so the newly added
-      // tasks are actually visible after refresh (fix: backend has data but
-      // frontend filtered it out because trip_filter didn't match).
-      const importedFilters = Array.from(
-        new Set(ts.map((t: any) => t.trip_filter).filter(Boolean))
-      ) as string[]
-      if (importedFilters.length === 1 && importedFilters[0] && importedFilters[0] !== '全部') {
-        setTripFilter(importedFilters[0])
-      } else if (importedFilters.length === 0 || importedFilters.every((f) => !f || f === '全部')) {
-        // All imported as 全部 → ensure we are viewing 全部
-        if (tripFilter !== '全部') setTripFilter('全部')
+      // Switch the active filter to the imported destination
+      if (unifiedTripFilter && unifiedTripFilter !== '全部') {
+        setTripFilter(unifiedTripFilter)
       }
       await loadTasks()
     } catch {
@@ -483,29 +476,42 @@ export default function TodayPage() {
       <Modal
         title="AI 识别导入预览"
         open={previewOpen}
-        onCancel={() => { setPreviewOpen(false); setPreviewData([]) }}
+        onCancel={() => { setPreviewOpen(false); setPreviewData([]); setUnifiedTripFilter('全部') }}
         width={960}
         footer={
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button onClick={() => { setPreviewOpen(false); setPreviewData([]) }}>取消</Button>
+            <Button onClick={() => { setPreviewOpen(false); setPreviewData([]); setUnifiedTripFilter('全部') }}>取消</Button>
             <Button type="primary" loading={confirming} onClick={handlePreviewConfirm}>
               确认导入 ({previewData.length} 条)
             </Button>
           </div>
         }
       >
+        {/* Unified destination selector */}
+        <div style={{ marginBottom: 12, padding: '8px 12px', background: '#f0f5ff', borderRadius: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontWeight: 600, whiteSpace: 'nowrap', color: '#1d39c4' }}>统一导入到目的地：</span>
+            <Select
+              style={{ minWidth: 180 }}
+              value={unifiedTripFilter}
+              onChange={(v) => setUnifiedTripFilter(v)}
+              options={[{ label: '全部', value: '全部' }, ...tripFilters.map((v) => ({ label: v, value: v }))]}
+            />
+          </div>
+        </div>
+
         <div style={{ maxHeight: 400, overflowY: 'auto' }}>
           {(() => {
-            // Group previewData by trip_filter
+            // Group previewData by category
             const groups: { key: string; items: any[] }[] = []
             const grouped: Record<string, any[]> = {}
             const ungrouped: any[] = []
 
             previewData.forEach((item: any, idx: number) => {
-              const gf = item.trip_filter
-              if (gf) {
-                if (!grouped[gf]) grouped[gf] = []
-                grouped[gf].push({ ...item, _idx: idx })
+              const cat = item.category
+              if (cat) {
+                if (!grouped[cat]) grouped[cat] = []
+                grouped[cat].push({ ...item, _idx: idx })
               } else {
                 ungrouped.push({ ...item, _idx: idx })
               }
@@ -514,22 +520,27 @@ export default function TodayPage() {
             // Preserve order of first appearance
             const order: string[] = []
             previewData.forEach((item: any) => {
-              const gf = item.trip_filter
-              if (gf && !order.includes(gf)) order.push(gf)
+              const cat = item.category
+              if (cat && !order.includes(cat)) order.push(cat)
             })
 
             for (const k of order) {
               if (grouped[k]) groups.push({ key: k, items: grouped[k] })
             }
-            if (ungrouped.length > 0) groups.push({ key: '未分组', items: ungrouped })
+            if (ungrouped.length > 0) groups.push({ key: '未分类', items: ungrouped })
 
             if (groups.length === 0) {
               return <Empty description="无预览数据" />
             }
 
+            // Collect unique categories for per-row dropdown
+            const categoryOptions = Array.from(
+              new Set(previewData.map((item: any) => item.category).filter(Boolean))
+            ).map((c: any) => ({ label: c, value: c }))
+
             return groups.map((group) => (
               <div key={group.key} style={{ marginBottom: 12 }}>
-                {/* Group header — read-only, visual separator */}
+                {/* Group header */}
                 <div style={{
                   padding: '6px 12px',
                   background: '#f0f5ff',
@@ -564,18 +575,18 @@ export default function TodayPage() {
                         {item.task_date || selectedDate.format('YYYY-MM-DD')}
                       </div>
                     </div>
-                    {/* Row 2: trip_filter + task_time + end_time + description */}
+                    {/* Row 2: category + task_time + end_time + description */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <Select
                         size="small"
-                        style={{ width: 120 }}
-                        placeholder="目的地"
-                        value={item.trip_filter || undefined}
+                        style={{ width: 140 }}
+                        placeholder="分类"
+                        value={item.category || undefined}
                         allowClear
-                        options={tripFilters.map((v) => ({ label: v, value: v }))}
+                        options={categoryOptions}
                         onChange={(val) => {
                           const next = [...previewData]
-                          next[item._idx] = { ...next[item._idx], trip_filter: val || '' }
+                          next[item._idx] = { ...next[item._idx], category: val || '' }
                           setPreviewData(next)
                         }}
                       />

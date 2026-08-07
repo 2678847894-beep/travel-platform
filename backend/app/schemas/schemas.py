@@ -92,6 +92,7 @@ class TaskOut(BaseModel):
     location: str = ""
     description: str = ""
     trip_filter: str = "全部"
+    category: str = ""
     is_completed: bool = False
     is_overdue: bool = False
     completed_date: Optional[date] = None
@@ -108,6 +109,7 @@ class TaskCreate(BaseModel):
     location: str = ""
     description: str = ""
     trip_filter: str = "全部"
+    category: str = ""
 
 
 # ── 文档文件 ──
