@@ -178,6 +178,18 @@ export default function TodayPage() {
       message.success(`成功导入 ${ts.length} 个任务`)
       setPreviewOpen(false)
       setPreviewData([])
+      // Switch the active filter to the imported group so the newly added
+      // tasks are actually visible after refresh (fix: backend has data but
+      // frontend filtered it out because trip_filter didn't match).
+      const importedFilters = Array.from(
+        new Set(ts.map((t: any) => t.trip_filter).filter(Boolean))
+      ) as string[]
+      if (importedFilters.length === 1 && importedFilters[0] && importedFilters[0] !== '全部') {
+        setTripFilter(importedFilters[0])
+      } else if (importedFilters.length === 0 || importedFilters.every((f) => !f || f === '全部')) {
+        // All imported as 全部 → ensure we are viewing 全部
+        if (tripFilter !== '全部') setTripFilter('全部')
+      }
       loadTasks()
     } catch {
       message.error('导入失败')
@@ -262,70 +274,118 @@ export default function TodayPage() {
         </div>
       </Card>
 
-      {/* Task List */}
+      {/* Task List — grouped by trip_filter */}
       {tasks.length === 0 ? (
         <Card>
           <Empty description={isAdmin ? '暂无任务，点击上方按钮添加' : '当天暂无任务'} />
         </Card>
       ) : (
-        tasks.map((task) => {
-          const isCompleted = task.is_completed
-          const isOverdue = task.is_overdue
-          return (
-            <Card
-              key={task.id}
-              style={{
-                marginBottom: 8,
-                opacity: isCompleted && !isOverdue ? 0.55 : 1,
-                ...(isOverdue && !isCompleted ? {
-                  borderColor: '#ff4d4f',
-                  backgroundColor: '#fff2f0',
-                } : {}),
-              }}
-              bodyStyle={{ padding: '12px 16px' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                <Checkbox
-                  checked={isCompleted}
-                  onChange={() => handleToggle(task.id)}
-                  style={{ marginTop: 4 }}
-                />
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    textDecoration: isCompleted ? 'line-through' : 'none',
-                    color: isOverdue && !isCompleted ? '#ff4d4f' : 'inherit',
-                  }}>
-                    {task.title}
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
-                    {task.trip_filter && (
-                      <Tag color="blue">{task.trip_filter}</Tag>
-                    )}
-                    {task.task_time && (
-                      <Tag>{task.task_time}{task.end_time ? ` - ${task.end_time}` : ''}</Tag>
-                    )}
-                    {task.end_date && (
-                      <Tag color="purple">至 {dayjs(task.end_date).format('MM/DD')}</Tag>
-                    )}
-                    {task.location && <Tag color="orange">{task.location}</Tag>}
-                    {isOverdue && !isCompleted && (
-                      <Tag color="red">已过期</Tag>
-                    )}
-                  </div>
-                  {task.description && (
-                    <div style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>{task.description}</div>
-                  )}
+        (() => {
+          // Group tasks by trip_filter, preserving first-appearance order
+          const grouped: Record<string, any[]> = {}
+          const order: string[] = []
+          tasks.forEach((task: any) => {
+            const gf = task.trip_filter || '未分组'
+            if (!grouped[gf]) {
+              grouped[gf] = []
+              order.push(gf)
+            }
+            grouped[gf].push(task)
+          })
+
+          return order.map((groupKey) => {
+            const groupTasks = grouped[groupKey]
+            const groupDone = groupTasks.filter((t) => t.is_completed).length
+            const groupTotal = groupTasks.length
+            const groupPercent = groupTotal > 0 ? Math.round((groupDone / groupTotal) * 100) : 0
+            return (
+              <div key={groupKey} style={{ marginBottom: 16 }}>
+                {/* Group header — visual separator row */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '8px 14px',
+                  background: 'linear-gradient(90deg, #e6f0ff 0%, #f0f5ff 100%)',
+                  borderLeft: '4px solid #1677ff',
+                  borderRadius: '6px 6px 0 0',
+                  fontWeight: 700,
+                  fontSize: 15,
+                  color: '#1d39c4',
+                }}>
+                  <span>{groupKey}</span>
+                  <span style={{ fontSize: 12, fontWeight: 500, color: '#5b7bb4' }}>
+                    {groupDone} / {groupTotal}
+                  </span>
                 </div>
-                {isAdmin && (
-                  <Button type="text" danger size="small" icon={<DeleteOutlined />}
-                    onClick={() => handleDelete(task.id)} />
-                )}
+                {/* Group progress bar */}
+                <div style={{ padding: '6px 14px 0', background: '#fafcff' }}>
+                  <Progress percent={groupPercent} showInfo={false} size="small" strokeColor="#1677ff" trailColor="#e6f0ff" />
+                </div>
+                {/* Group items — indented with left color bar */}
+                <div style={{ background: '#fff', border: '1px solid #f0f0f0', borderTop: 'none', borderRadius: '0 0 6px 6px' }}>
+                  {groupTasks.map((task: any) => {
+                    const isCompleted = task.is_completed
+                    const isOverdue = task.is_overdue
+                    return (
+                      <div
+                        key={task.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 12,
+                          padding: '12px 16px 12px 18px',
+                          borderLeft: '3px solid #bcd4ff',
+                          borderBottom: '1px solid #f5f5f5',
+                          opacity: isCompleted && !isOverdue ? 0.55 : 1,
+                          ...(isOverdue && !isCompleted ? {
+                            borderLeftColor: '#ffccc7',
+                            background: '#fff2f0',
+                          } : {}),
+                        }}
+                      >
+                        <Checkbox
+                          checked={isCompleted}
+                          onChange={() => handleToggle(task.id)}
+                          style={{ marginTop: 4 }}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <div style={{
+                            fontWeight: 600,
+                            fontSize: 15,
+                            textDecoration: isCompleted ? 'line-through' : 'none',
+                            color: isOverdue && !isCompleted ? '#ff4d4f' : 'inherit',
+                          }}>
+                            {task.title}
+                          </div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+                            {task.task_time && (
+                              <Tag>{task.task_time}{task.end_time ? ` - ${task.end_time}` : ''}</Tag>
+                            )}
+                            {task.end_date && (
+                              <Tag color="purple">至 {dayjs(task.end_date).format('MM/DD')}</Tag>
+                            )}
+                            {task.location && <Tag color="orange">{task.location}</Tag>}
+                            {isOverdue && !isCompleted && (
+                              <Tag color="red">已过期</Tag>
+                            )}
+                          </div>
+                          {task.description && (
+                            <div style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>{task.description}</div>
+                          )}
+                        </div>
+                        {isAdmin && (
+                          <Button type="text" danger size="small" icon={<DeleteOutlined />}
+                            onClick={() => handleDelete(task.id)} />
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            </Card>
-          )
-        })
+            )
+          })
+        })()
       )}
 
       {/* Add Task Modal */}
