@@ -199,6 +199,9 @@ async def ai_import_preview(
                 'end_date': (task_d + timedelta(days=365)).isoformat(),
                 'description': desc,
                 'trip_filter': current_trip_filter,
+                'task_time': '',
+                'end_time': '',
+                'location': '',
             })
 
     elif ext in ('docx', 'doc'):
@@ -246,6 +249,9 @@ async def ai_import_preview(
                         'end_date': (today + timedelta(days=365)).isoformat(),
                         'description': '',
                         'trip_filter': current_trip_filter,
+                        'task_time': '',
+                        'end_time': '',
+                        'location': '',
                     })
 
     else:

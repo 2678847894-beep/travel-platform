@@ -52,7 +52,7 @@ export const importSopDocument = (formData: FormData) =>
 export const getSopStats = () => api.get('/sop/stats')
 
 // Tasks
-export const getTasks = (taskDate?: string, tripFilter = '全部') =>
+export const getTasks = (taskDate?: string, tripFilter = 'all') =>
   api.get('/tasks', { params: { task_date: taskDate, trip_filter: tripFilter } })
 export const createTask = (data: any) => api.post('/tasks', data)
 export const toggleTask = (id: number, toggleDate?: string) =>
