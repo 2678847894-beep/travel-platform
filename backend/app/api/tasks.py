@@ -288,10 +288,12 @@ def ai_import_confirm(
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
 ):
+    print(f"[ai_import_confirm] Received {len(body.tasks)} tasks from frontend")
     created = []
-    for item in body.tasks:
+    for i, item in enumerate(body.tasks):
         title = item.get('title', '').strip()
         if not title:
+            print(f"[ai_import_confirm] SKIP item {i}: empty title")
             continue
         task_date_str = item.get('task_date', date.today().isoformat())
         try:
@@ -312,18 +314,39 @@ def ai_import_confirm(
             td_only = task_dt.date()
             end_dt = datetime.combine(td_only + timedelta(days=365), datetime.min.time())
 
+        trip_filter_val = item.get('trip_filter', '全部') or '全部'
+        desc_val = item.get('description', '') or ''
+        print(f"[ai_import_confirm] TASK[{i}] title='{title}' trip_filter='{trip_filter_val}' task_date='{task_date_str}' desc='{desc_val[:80]}'")
+
         task = DailyTask(
             title=title,
             task_date=task_dt,
             end_date=end_dt,
-            description=item.get('description', '') or '',
-            trip_filter=item.get('trip_filter', '全部') or '全部',
+            description=desc_val,
+            trip_filter=trip_filter_val,
             task_time=item.get('task_time', '') or '',
             end_time=item.get('end_time', '') or '',
             location=item.get('location', '') or '',
         )
         db.add(task)
+        db.flush()  # Assign DB-generated ID without committing transaction
         created.append(task)
+        print(f"[ai_import_confirm] TASK[{i}] flushed with id={task.id}")
 
     db.commit()
-    return {'ok': True, 'count': len(created)}
+    print(f"[ai_import_confirm] COMMIT done. Created {len(created)} tasks.")
+    # Re-query to verify persistence
+    task_ids = [t.id for t in created]
+    verify = db.query(DailyTask).filter(DailyTask.id.in_(task_ids)).count()
+    print(f"[ai_import_confirm] VERIFY: queried {verify} of {len(task_ids)} tasks from DB after commit")
+
+    result_tasks = []
+    for t in created:
+        db.refresh(t)
+        result_tasks.append({
+            'id': t.id,
+            'title': t.title,
+            'trip_filter': t.trip_filter,
+            'task_date': t.task_date.isoformat() if t.task_date else '',
+        })
+    return {'ok': True, 'count': len(created), 'tasks': result_tasks}

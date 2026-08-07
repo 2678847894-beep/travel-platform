@@ -4,7 +4,7 @@ import {
   Checkbox, Segmented, message, Tag, Empty, Progress, Upload, Grid,
 } from 'antd'
 import {
-  PlusOutlined, DeleteOutlined, UploadOutlined, RobotOutlined,
+  PlusOutlined, DeleteOutlined, UploadOutlined, RobotOutlined, ReloadOutlined,
 } from '@ant-design/icons'
 import dayjs, { Dayjs } from 'dayjs'
 import {
@@ -38,6 +38,19 @@ export default function TodayPage() {
   const [previewData, setPreviewData] = useState<any[]>([])
   const [previewOpen, setPreviewOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    try {
+      await loadTasks()
+      message.success('已从后端同步最新数据')
+    } catch {
+      message.error('刷新失败')
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   // Load trip filters from API
   useEffect(() => {
@@ -174,8 +187,9 @@ export default function TodayPage() {
         task_date: dateStr,
         end_date: dayjs(dateStr).add(1, 'year').format('YYYY-MM-DD'),
       }))
-      await aiImportTasksConfirm({ tasks: ts })
-      message.success(`成功导入 ${ts.length} 个任务`)
+      const res = await aiImportTasksConfirm({ tasks: ts })
+      const importedCount = res.data?.count || ts.length
+      message.success(`已成功导入 ${importedCount} 条任务`)
       setPreviewOpen(false)
       setPreviewData([])
       // Switch the active filter to the imported group so the newly added
@@ -190,7 +204,7 @@ export default function TodayPage() {
         // All imported as 全部 → ensure we are viewing 全部
         if (tripFilter !== '全部') setTripFilter('全部')
       }
-      loadTasks()
+      await loadTasks()
     } catch {
       message.error('导入失败')
     } finally {
@@ -209,6 +223,15 @@ export default function TodayPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>每日任务</h2>
+            <Button
+              icon={<ReloadOutlined />}
+              size="small"
+              loading={refreshing}
+              onClick={handleRefresh}
+              title="从后端同步刷新最新数据"
+            >
+              刷新
+            </Button>
             <DatePicker value={selectedDate} onChange={(d) => setSelectedDate(d || dayjs())} />
           </div>
           {isAdmin && (
