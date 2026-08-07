@@ -218,11 +218,27 @@ async def ai_import_preview(
                 continue
 
             # Detect if paragraph is bold → use as group title
-            # Check first non-empty run's bold state (more reliable than all runs)
+            # 1) Check first non-empty run's bold state (direct formatting)
             is_bold = False
             if para.runs:
                 first_text_run = next((r for r in para.runs if r.text.strip()), None)
-                if first_text_run and first_text_run.bold:
+                if first_text_run is not None and first_text_run.bold is True:
+                    is_bold = True
+
+            # 2) Check paragraph style's font bold (style-level formatting)
+            if not is_bold and para.style:
+                try:
+                    style_bold = para.style.font.bold
+                    if style_bold is True:
+                        is_bold = True
+                except Exception:
+                    pass
+
+            # 3) Safeguard: check if style name indicates a heading
+            if not is_bold and para.style:
+                style_name = (para.style.name or '').lower()
+                heading_keywords = ['heading', 'title', '标题', '目录']
+                if any(kw in style_name for kw in heading_keywords):
                     is_bold = True
 
             if is_bold:
