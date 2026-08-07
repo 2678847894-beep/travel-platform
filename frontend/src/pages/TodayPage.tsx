@@ -40,6 +40,8 @@ export default function TodayPage() {
   const [confirming, setConfirming] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [unifiedTripFilter, setUnifiedTripFilter] = useState('全部')
+  const [unifiedStartTime, setUnifiedStartTime] = useState<Dayjs | null>(null)
+  const [unifiedEndTime, setUnifiedEndTime] = useState<Dayjs | null>(null)
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -187,6 +189,8 @@ export default function TodayPage() {
         task_date: dateStr,
         end_date: dayjs(dateStr).add(1, 'year').format('YYYY-MM-DD'),
         trip_filter: unifiedTripFilter,
+        task_time: item.task_time || (unifiedStartTime ? unifiedStartTime.format('HH:mm') : ''),
+        end_time: item.end_time || (unifiedEndTime ? unifiedEndTime.format('HH:mm') : ''),
       }))
       const res = await aiImportTasksConfirm({ tasks: ts })
       const importedCount = res.data?.count || ts.length
@@ -476,18 +480,18 @@ export default function TodayPage() {
       <Modal
         title="AI 识别导入预览"
         open={previewOpen}
-        onCancel={() => { setPreviewOpen(false); setPreviewData([]); setUnifiedTripFilter('全部') }}
+        onCancel={() => { setPreviewOpen(false); setPreviewData([]); setUnifiedTripFilter('全部'); setUnifiedStartTime(null); setUnifiedEndTime(null) }}
         width={960}
         footer={
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button onClick={() => { setPreviewOpen(false); setPreviewData([]); setUnifiedTripFilter('全部') }}>取消</Button>
+            <Button onClick={() => { setPreviewOpen(false); setPreviewData([]); setUnifiedTripFilter('全部'); setUnifiedStartTime(null); setUnifiedEndTime(null) }}>取消</Button>
             <Button type="primary" loading={confirming} onClick={handlePreviewConfirm}>
               确认导入 ({previewData.length} 条)
             </Button>
           </div>
         }
       >
-        {/* Unified destination selector */}
+        {/* Unified destination & time selectors */}
         <div style={{ marginBottom: 12, padding: '8px 12px', background: '#f0f5ff', borderRadius: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontWeight: 600, whiteSpace: 'nowrap', color: '#1d39c4' }}>统一导入到目的地：</span>
@@ -496,6 +500,22 @@ export default function TodayPage() {
               value={unifiedTripFilter}
               onChange={(v) => setUnifiedTripFilter(v)}
               options={[{ label: '全部', value: '全部' }, ...tripFilters.map((v) => ({ label: v, value: v }))]}
+            />
+            <span style={{ fontWeight: 600, whiteSpace: 'nowrap', color: '#1d39c4' }}>开始时间：</span>
+            <TimePicker
+              value={unifiedStartTime}
+              onChange={(v) => setUnifiedStartTime(v)}
+              format="HH:mm"
+              placeholder="默认开始"
+              style={{ width: 120 }}
+            />
+            <span style={{ fontWeight: 600, whiteSpace: 'nowrap', color: '#1d39c4' }}>结束时间：</span>
+            <TimePicker
+              value={unifiedEndTime}
+              onChange={(v) => setUnifiedEndTime(v)}
+              format="HH:mm"
+              placeholder="默认结束"
+              style={{ width: 120 }}
             />
           </div>
         </div>
