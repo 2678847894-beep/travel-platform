@@ -484,7 +484,7 @@ export default function TodayPage() {
         title="AI 识别导入预览"
         open={previewOpen}
         onCancel={() => { setPreviewOpen(false); setPreviewData([]) }}
-        width={700}
+        width={960}
         footer={
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <Button onClick={() => { setPreviewOpen(false); setPreviewData([]) }}>取消</Button>
@@ -544,37 +544,77 @@ export default function TodayPage() {
                 {/* Group items */}
                 {group.items.map((item: any) => (
                   <div key={item._idx} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '6px 12px',
+                    padding: '8px 12px',
                     borderBottom: '1px solid #f0f0f0',
                   }}>
-                    <div style={{ flex: 1 }}>
-                      <Input
+                    {/* Row 1: Title + Date */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                      <div style={{ flex: 1 }}>
+                        <Input
+                          size="small"
+                          value={item.title}
+                          onChange={(e) => {
+                            const next = [...previewData]
+                            next[item._idx] = { ...next[item._idx], title: e.target.value }
+                            setPreviewData(next)
+                          }}
+                        />
+                      </div>
+                      <div style={{ width: 100, fontSize: 12, color: '#888', textAlign: 'center' }}>
+                        {item.task_date || selectedDate.format('YYYY-MM-DD')}
+                      </div>
+                    </div>
+                    {/* Row 2: trip_filter + task_time + end_time + description */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Select
                         size="small"
-                        value={item.title}
-                        onChange={(e) => {
+                        style={{ width: 120 }}
+                        placeholder="目的地"
+                        value={item.trip_filter || undefined}
+                        allowClear
+                        options={tripFilters.map((v) => ({ label: v, value: v }))}
+                        onChange={(val) => {
                           const next = [...previewData]
-                          next[item._idx] = { ...next[item._idx], title: e.target.value }
+                          next[item._idx] = { ...next[item._idx], trip_filter: val || '' }
                           setPreviewData(next)
                         }}
                       />
-                    </div>
-                    <div style={{ width: 100, fontSize: 12, color: '#888', textAlign: 'center' }}>
-                      {item.task_date || selectedDate.format('YYYY-MM-DD')}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <Input
+                      <TimePicker
                         size="small"
-                        placeholder="备注"
-                        value={item.description || ''}
-                        onChange={(e) => {
+                        style={{ width: 100 }}
+                        format="HH:mm"
+                        placeholder="开始时间"
+                        value={item.task_time ? dayjs(item.task_time, 'HH:mm') : null}
+                        onChange={(t) => {
                           const next = [...previewData]
-                          next[item._idx] = { ...next[item._idx], description: e.target.value }
+                          next[item._idx] = { ...next[item._idx], task_time: t ? t.format('HH:mm') : '' }
                           setPreviewData(next)
                         }}
                       />
+                      <TimePicker
+                        size="small"
+                        style={{ width: 100 }}
+                        format="HH:mm"
+                        placeholder="结束时间"
+                        value={item.end_time ? dayjs(item.end_time, 'HH:mm') : null}
+                        onChange={(t) => {
+                          const next = [...previewData]
+                          next[item._idx] = { ...next[item._idx], end_time: t ? t.format('HH:mm') : '' }
+                          setPreviewData(next)
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <Input
+                          size="small"
+                          placeholder="备注"
+                          value={item.description || ''}
+                          onChange={(e) => {
+                            const next = [...previewData]
+                            next[item._idx] = { ...next[item._idx], description: e.target.value }
+                            setPreviewData(next)
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}

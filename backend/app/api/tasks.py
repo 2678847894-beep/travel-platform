@@ -251,6 +251,9 @@ async def ai_import_preview(
                 'end_date': (today + timedelta(days=365)).isoformat(),
                 'description': '',
                 'trip_filter': current_trip_filter,
+                'task_time': '',
+                'end_time': '',
+                'location': '',
             })
 
         # Extract from tables — inherit last trip_filter
