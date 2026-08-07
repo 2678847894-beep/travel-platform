@@ -189,8 +189,8 @@ export default function TodayPage() {
         task_date: dateStr,
         end_date: dayjs(dateStr).add(1, 'year').format('YYYY-MM-DD'),
         trip_filter: unifiedTripFilter,
-        task_time: item.task_time || (unifiedStartTime ? unifiedStartTime.format('HH:mm') : ''),
-        end_time: item.end_time || (unifiedEndTime ? unifiedEndTime.format('HH:mm') : ''),
+        task_time: item.task_time || (unifiedStartTime ? unifiedStartTime.format('YYYY-MM-DD HH:mm') : ''),
+        end_time: item.end_time || (unifiedEndTime ? unifiedEndTime.format('YYYY-MM-DD HH:mm') : ''),
       }))
       const res = await aiImportTasksConfirm({ tasks: ts })
       const importedCount = res.data?.count || ts.length
@@ -502,20 +502,22 @@ export default function TodayPage() {
               options={[{ label: '全部', value: '全部' }, ...tripFilters.map((v) => ({ label: v, value: v }))]}
             />
             <span style={{ fontWeight: 600, whiteSpace: 'nowrap', color: '#1d39c4' }}>开始时间：</span>
-            <TimePicker
+            <DatePicker
               value={unifiedStartTime}
               onChange={(v) => setUnifiedStartTime(v)}
-              format="HH:mm"
+              showTime={{ format: 'HH:mm' }}
+              format="YYYY-MM-DD HH:mm"
               placeholder="默认开始"
-              style={{ width: 120 }}
+              style={{ width: 180 }}
             />
             <span style={{ fontWeight: 600, whiteSpace: 'nowrap', color: '#1d39c4' }}>结束时间：</span>
-            <TimePicker
+            <DatePicker
               value={unifiedEndTime}
               onChange={(v) => setUnifiedEndTime(v)}
-              format="HH:mm"
+              showTime={{ format: 'HH:mm' }}
+              format="YYYY-MM-DD HH:mm"
               placeholder="默认结束"
-              style={{ width: 120 }}
+              style={{ width: 180 }}
             />
           </div>
         </div>
