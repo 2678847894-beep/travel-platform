@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import {
-  Button, DatePicker, Modal, Form, Input, TimePicker, Select,
-  Checkbox, message, Tag, Empty, Upload, Grid,
+  Card, Button, DatePicker, Modal, Form, Input, TimePicker, Select,
+  Checkbox, Segmented, message, Tag, Empty, Progress, Upload, Grid,
 } from 'antd'
 import {
   PlusOutlined, DeleteOutlined, UploadOutlined, RobotOutlined, ReloadOutlined,
+  CalendarOutlined, UpOutlined, DownOutlined,
 } from '@ant-design/icons'
 import dayjs, { Dayjs } from 'dayjs'
 import {
@@ -27,11 +28,13 @@ export default function TodayPage() {
   const screens = Grid.useBreakpoint()
   const isMobile = !screens.md
 
+  // Trip filters (dynamic, synced with sidebar templates)
   const [tripFilters, setTripFilters] = useState<string[]>(DEFAULT_TRIP_FILTERS)
   const [addFilterOpen, setAddFilterOpen] = useState(false)
   const [newFilterName, setNewFilterName] = useState('')
   const [addingFilter, setAddingFilter] = useState(false)
 
+  // AI import states
   const [importing, setImporting] = useState(false)
   const [previewData, setPreviewData] = useState<any[]>([])
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -40,6 +43,16 @@ export default function TodayPage() {
   const [unifiedTripFilter, setUnifiedTripFilter] = useState('全部')
   const [unifiedStartTime, setUnifiedStartTime] = useState<Dayjs | null>(null)
   const [unifiedEndTime, setUnifiedEndTime] = useState<Dayjs | null>(null)
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
+
+  const toggleCategoryCollapse = (catKey: string) => {
+    setCollapsedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(catKey)) next.delete(catKey)
+      else next.add(catKey)
+      return next
+    })
+  }
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -53,6 +66,7 @@ export default function TodayPage() {
     }
   }
 
+  // Load trip filters from API
   useEffect(() => {
     const loadFilters = async () => {
       try {
@@ -73,6 +87,7 @@ export default function TodayPage() {
     loadFilters()
   }, [])
 
+  // Add new trip filter
   const handleAddFilter = async () => {
     if (!newFilterName.trim()) {
       message.warning('请输入目的地名称')
@@ -106,9 +121,11 @@ export default function TodayPage() {
 
   useEffect(() => { loadTasks() }, [selectedDate, tripFilter])
 
+  // Auto-set end_date = task_date + 1 year
   const handleTaskDateChange = (d: Dayjs | null) => {
     if (d) {
-      form.setFieldsValue({ end_date: d.add(1, 'year') })
+      const end = d.add(1, 'year')
+      form.setFieldsValue({ end_date: end })
     }
   }
 
@@ -158,6 +175,7 @@ export default function TodayPage() {
     } catch { message.error('添加失败') }
   }
 
+  // AI Import handlers
   const handleAiImport = async (file: File) => {
     setImporting(true)
     try {
@@ -189,9 +207,11 @@ export default function TodayPage() {
         end_time: item.end_time || (unifiedEndTime ? unifiedEndTime.format('HH:mm') : ''),
       }))
       const res = await aiImportTasksConfirm({ tasks: ts })
-      message.success(`已成功导入 ${res.data?.count || ts.length} 条任务`)
+      const importedCount = res.data?.count || ts.length
+      message.success(`已成功导入 ${importedCount} 条任务`)
       setPreviewOpen(false)
       setPreviewData([])
+      // Switch the active filter to the imported destination
       const targetFilter = unifiedTripFilter || tripFilter
       if (unifiedTripFilter && unifiedTripFilter !== '全部') {
         setTripFilter(unifiedTripFilter)
@@ -209,215 +229,271 @@ export default function TodayPage() {
   const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', background: '#fff', minHeight: '100vh', padding: '16px 24px' }}>
+    <div style={{ maxWidth: 900, margin: '0 auto', background: '#f5f5f5', minHeight: '100vh', padding: 16 }}>
       <style>{`
-        .task-item { transition: background 0.15s; }
-        .task-item:hover { background: #f0f5ff !important; }
-        .task-item.task-overdue:hover { background: #fff2f0 !important; }
-        .filter-btn { font-family: inherit; transition: all 0.2s; }
-        .filter-btn:hover { border-color: #1677ff !important; color: #1677ff !important; }
+        .task-row { cursor: pointer; transition: background 0.15s; }
+        .task-row:hover { background: #f5f9ff !important; }
+        .task-row.task-overdue:hover { background: #fff2e0 !important; }
+        .delete-btn .ant-btn-icon { font-size: 18px; }
+        .delete-btn:hover { color: #ff4d4f !important; background: #fff1f0 !important; }
       `}</style>
-
-      {/* 1. Header bar */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        paddingBottom: 16, borderBottom: '1px solid #f0f0f0', marginBottom: 20,
-        flexWrap: 'wrap', gap: 12,
-      }}>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: '#1e293b' }}>每日任务</h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <DatePicker
-            value={selectedDate}
-            onChange={(d) => setSelectedDate(d || dayjs())}
-          />
-          <Button
-            icon={<ReloadOutlined />}
-            size="small"
-            loading={refreshing}
-            onClick={handleRefresh}
-          />
-        </div>
-      </div>
-
-      {/* 2. Filter + progress row */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        flexWrap: 'wrap', gap: 12,
-        marginBottom: isAdmin ? 12 : 20,
-      }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-          {['全部', ...tripFilters].map((f) => (
-            <button
-              key={f}
-              onClick={() => setTripFilter(f)}
-              className="filter-btn"
-              style={{
-                padding: '4px 14px',
-                borderRadius: 16,
-                border: f === tripFilter ? '1px solid #1677ff' : '1px solid #d9d9d9',
-                background: f === tripFilter ? '#1677ff' : '#fff',
-                color: f === tripFilter ? '#fff' : '#595959',
-                fontSize: 13,
-                cursor: 'pointer',
-              }}
-            >
-              {f}
-            </button>
-          ))}
-          {isAdmin && (
+      {/* Top Card */}
+      <Card style={{ marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>每日任务</h2>
             <Button
-              type="text" size="small"
-              icon={<PlusOutlined />}
-              onClick={() => setAddFilterOpen(true)}
-              style={{ flexShrink: 0, color: '#8c8c8c' }}
-            />
+              icon={<ReloadOutlined />}
+              size="small"
+              loading={refreshing}
+              onClick={handleRefresh}
+              title="从后端同步刷新最新数据"
+            >
+              刷新
+            </Button>
+            <DatePicker value={selectedDate} onChange={(d) => setSelectedDate(d || dayjs())} />
+          </div>
+          {isAdmin && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => {
+                form.resetFields()
+                form.setFieldsValue({
+                  task_date: selectedDate,
+                  trip_filter: tripFilter,
+                  end_date: selectedDate.add(1, 'year'),
+                })
+                setModalOpen(true)
+              }}>
+                添加任务
+              </Button>
+              <Upload
+                accept=".docx,.xlsx,.doc,.xls"
+                showUploadList={false}
+                beforeUpload={(file) => {
+                  handleAiImport(file)
+                  return false
+                }}
+              >
+                <Button
+                  icon={<RobotOutlined />}
+                  loading={importing}
+                  style={{ borderStyle: 'dashed' }}
+                >
+                  AI 识别导入
+                </Button>
+              </Upload>
+            </div>
           )}
         </div>
 
+        {/* Progress Bar */}
         {totalCount > 0 && (
-          <div style={{ fontSize: 13, color: '#8c8c8c', whiteSpace: 'nowrap' }}>
-            已完成 {completedCount}/{totalCount} &middot; {percent}%
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 14, fontWeight: 600, color: '#262626' }}>
+              <span>完成进度</span>
+              <span>{completedCount} / {totalCount} （{percent}%）</span>
+            </div>
+            <Progress percent={percent} showInfo={false} strokeWidth={8} strokeColor="#1677ff" trailColor="#f0f0f0" />
           </div>
         )}
-      </div>
 
-      {/* 3. Admin action buttons */}
-      {isAdmin && (
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => {
-            form.resetFields()
-            form.setFieldsValue({
-              task_date: selectedDate,
-              trip_filter: tripFilter,
-              end_date: selectedDate.add(1, 'year'),
-            })
-            setModalOpen(true)
-          }}>
-            添加任务
-          </Button>
-          <Upload
-            accept=".docx,.xlsx,.doc,.xls"
-            showUploadList={false}
-            beforeUpload={(file) => {
-              handleAiImport(file)
-              return false
-            }}
-          >
-            <Button
-              icon={<RobotOutlined />}
-              loading={importing}
-              style={{ borderStyle: 'dashed' }}
-            >
-              AI 识别导入
-            </Button>
-          </Upload>
+        {/* Segmented Filter */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: isMobile ? 'auto' : 'visible' }}>
+        <Segmented
+          options={['全部', ...tripFilters]}
+          value={tripFilter}
+          onChange={(v) => setTripFilter(v as string)}
+        />
+        {isAdmin && (
+          <Button
+            type="text"
+            size="small"
+            icon={<PlusOutlined />}
+            onClick={() => setAddFilterOpen(true)}
+            style={{ flexShrink: 0 }}
+          />
+        )}
         </div>
-      )}
+      </Card>
 
-      {/* 4. Task list */}
-      {totalCount === 0 ? (
-        <div style={{ paddingTop: 40 }}>
+      {/* Task List — grouped by trip_filter */}
+      {tasks.length === 0 ? (
+        <Card>
           <Empty description={isAdmin ? '暂无任务，点击上方按钮添加' : '当天暂无任务'} />
-        </div>
+        </Card>
       ) : (
-        <div>
-          {(() => {
-            const grouped: Record<string, any[]> = {}
-            const order: string[] = []
-            tasks.forEach((task: any) => {
-              const gf = task.trip_filter || '未分组'
-              if (!grouped[gf]) { grouped[gf] = []; order.push(gf) }
-              grouped[gf].push(task)
-            })
+        (() => {
+          // Group tasks by trip_filter, preserving first-appearance order
+          const grouped: Record<string, any[]> = {}
+          const order: string[] = []
+          tasks.forEach((task: any) => {
+            const gf = task.trip_filter || '未分组'
+            if (!grouped[gf]) {
+              grouped[gf] = []
+              order.push(gf)
+            }
+            grouped[gf].push(task)
+          })
 
-            return order.map((groupKey) => {
-              const groupTasks = grouped[groupKey]
-              return (
-                <div key={groupKey} style={{ marginBottom: 20 }}>
-                  {/* Group header */}
+          return order.map((groupKey) => {
+            const groupTasks = grouped[groupKey]
+            const groupDone = groupTasks.filter((t) => t.is_completed).length
+            const groupTotal = groupTasks.length
+            const groupPercent = groupTotal > 0 ? Math.round((groupDone / groupTotal) * 100) : 0
+            return (
+              <Card
+                key={groupKey}
+                title={
                   <div style={{
-                    fontSize: 14, color: '#8c8c8c', fontWeight: 600,
-                    paddingLeft: 12, marginBottom: 8,
-                    borderLeft: '3px solid #1677ff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: '#e6f7ff',
+                    borderLeft: '4px solid #1677ff',
+                    borderRadius: '4px 4px 0 0',
+                    padding: '4px 0',
+                    fontWeight: 700,
+                    fontSize: 15,
+                    color: '#1d39c4',
                   }}>
-                    {groupKey}
+                    <span>{groupKey}</span>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: '#5b7bb4' }}>
+                      {groupDone} / {groupTotal}
+                    </span>
                   </div>
-
-                  {/* Tasks */}
-                  <div style={{ paddingLeft: 12 }}>
-                    {groupTasks.map((task: any) => {
-                      const isCompleted = task.is_completed
-                      const isOverdue = task.is_overdue
+                }
+                style={{ marginBottom: 16, background: 'transparent', boxShadow: 'none' }}
+                styles={{
+                  header: { background: 'transparent', borderBottom: 'none', padding: '8px 14px 4px' },
+                  body: { padding: 0 },
+                }}
+              >
+                <div style={{ padding: '8px 14px 0' }}>
+                  <Progress percent={groupPercent} showInfo={false} strokeWidth={6} strokeColor="#1677ff" trailColor="#e6f0ff" />
+                </div>
+                <div style={{ borderTop: '1px solid #f0f0f0' }}>
+                  {(() => {
+                    // Sub-group by category within this trip_filter group
+                    const catGroups: Record<string, any[]> = {}
+                    const catOrder: string[] = []
+                    groupTasks.forEach((task: any) => {
+                      const cat = (task.category && task.category.trim()) || '其他'
+                      if (!catGroups[cat]) {
+                        catGroups[cat] = []
+                        catOrder.push(cat)
+                      }
+                      catGroups[cat].push(task)
+                    })
+                    return catOrder.map((catKey) => {
+                      const catTasks = catGroups[catKey]
+                      const catDone = catTasks.filter((t: any) => t.is_completed).length
+                      const catTotal = catTasks.length
                       return (
-                        <div
-                          key={task.id}
-                          onClick={() => handleToggle(task.id)}
-                          className={`task-item${isOverdue && !isCompleted ? ' task-overdue' : ''}`}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 10,
-                            padding: '8px 12px',
-                            borderBottom: '1px solid #f0f0f0',
-                            opacity: isCompleted && !isOverdue ? 0.5 : 1,
-                            cursor: 'pointer',
-                            ...(isOverdue && !isCompleted ? { background: '#fff2f0' } : {}),
-                          }}
-                        >
-                          <Checkbox
-                            checked={isCompleted}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={() => handleToggle(task.id)}
-                          />
-
-                          <span style={{
-                            flex: 1, fontSize: 15, fontWeight: 600,
-                            textDecoration: isCompleted ? 'line-through' : 'none',
-                            color: isOverdue && !isCompleted ? '#ff4d4f' : '#262626',
-                          }}>
-                            {task.title}
-                          </span>
-
-                          {task.trip_filter && (
-                            <Tag color="blue" style={{ margin: 0 }}>{task.trip_filter}</Tag>
-                          )}
-
-                          {task.task_time && (
-                            <Tag style={{ margin: 0 }}>
-                              {task.task_time}{task.end_time ? ` - ${task.end_time}` : ''}
-                            </Tag>
-                          )}
-
-                          {isOverdue && !isCompleted && (
-                            <Tag color="red" style={{ margin: 0 }}>已过期</Tag>
-                          )}
-
-                          {task.location && (
-                            <Tag color="orange" style={{ margin: 0 }}>{task.location}</Tag>
-                          )}
-
-                          {task.end_date && (
-                            <Tag color="purple" style={{ margin: 0 }}>
-                              至 {dayjs(task.end_date).format('MM/DD')}
-                            </Tag>
-                          )}
-
-                          {isAdmin && (
-                            <Button
-                              type="text" danger size="small"
-                              icon={<DeleteOutlined />}
-                              onClick={(e) => { e.stopPropagation(); handleDelete(task.id) }}
-                            />
-                          )}
+                        <div key={catKey} style={{
+                          border: '1px solid #d9d9d9',
+                          borderRadius: 8,
+                          marginBottom: 12,
+                          overflow: 'hidden',
+                          background: 'transparent',
+                        }}>
+                          {/* Category sub-header */}
+                          <div onClick={() => toggleCategoryCollapse(`${groupKey}-${catKey}`)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '8px 12px 8px 14px',
+                              background: 'transparent',
+                              borderLeft: '3px solid #1677ff',
+                              borderBottom: '1px solid #f0f0f0',
+                              fontWeight: 700,
+                              fontSize: 14,
+                              color: '#262626',
+                              cursor: 'pointer',
+                              userSelect: 'none',
+                            }}>
+                            <span>{catKey}</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: '#8c8c8c' }}>
+                                {catDone}/{catTotal}
+                              </span>
+                              {collapsedCategories.has(`${groupKey}-${catKey}`)
+                                ? <DownOutlined style={{ fontSize: 10, color: '#bfbfbf' }} />
+                                : <UpOutlined style={{ fontSize: 10, color: '#bfbfbf' }} />}
+                            </span>
+                          </div>
+                          {/* Category tasks — compact without per-task left border */}
+                          {!collapsedCategories.has(`${groupKey}-${catKey}`) && catTasks.map((task: any) => {
+                            const isCompleted = task.is_completed
+                            const isOverdue = task.is_overdue
+                            return (
+                              <div
+                                key={task.id}
+                                onClick={() => handleToggle(task.id)}
+                                className={`task-row${isOverdue && !isCompleted ? ' task-overdue' : ''}`}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'flex-start',
+                                  gap: 12,
+                                  padding: '10px 16px 10px 18px',
+                                  borderBottom: '1px solid #f0f0f0',
+                                  opacity: isCompleted && !isOverdue ? 0.55 : 1,
+                                  ...(isOverdue && !isCompleted ? {
+                                    background: '#fff2f0',
+                                  } : {}),
+                                }}
+                              >
+                                <Checkbox
+                                  checked={isCompleted}
+                                  onClick={(e) => e.stopPropagation()}
+                                  onChange={() => handleToggle(task.id)}
+                                  style={{ marginTop: 4 }}
+                                />
+                                <div style={{ flex: 1 }}>
+                                  <div style={{
+                                    fontWeight: 600,
+                                    fontSize: 15,
+                                    textDecoration: isCompleted ? 'line-through' : 'none',
+                                    color: isOverdue && !isCompleted ? '#ff4d4f' : 'inherit',
+                                  }}>
+                                    {task.title}
+                                  </div>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+                                    {task.task_time && (
+                                      <Tag>{task.task_time}{task.end_time ? ` - ${task.end_time}` : ''}</Tag>
+                                    )}
+                                    {task.end_date && (
+                                      <Tag style={{ background: '#f0e6ff', color: '#722ed1', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                        <CalendarOutlined style={{ fontSize: 11 }} />至 {dayjs(task.end_date).format('MM/DD')}
+                                      </Tag>
+                                    )}
+                                    {task.location && <Tag color="orange">{task.location}</Tag>}
+                                    {isOverdue && !isCompleted && (
+                                      <Tag color="red">已过期</Tag>
+                                    )}
+                                  </div>
+                                  {task.description && (
+                                    <div style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>{task.description}</div>
+                                  )}
+                                </div>
+                                {isAdmin && (
+                                  <Button type="text" danger className="delete-btn"
+                                    style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                                    icon={<DeleteOutlined />}
+                                    onClick={(e) => { e.stopPropagation(); handleDelete(task.id) }} />
+                                )}
+                              </div>
+                            )
+                          })}
                         </div>
                       )
-                    })}
-                  </div>
+                    })
+                  })()}
                 </div>
-              )
-            })
-          })()}
-        </div>
+              </Card>
+            )
+          })
+        })()
       )}
 
       {/* Add Task Modal */}
@@ -468,6 +544,7 @@ export default function TodayPage() {
             <Input.TextArea rows={3} placeholder="选填" />
           </Form.Item>
 
+          {/* AI import inside modal */}
           <Form.Item label="AI 识别导入">
             <Upload
               accept=".docx,.xlsx,.doc,.xls"
@@ -502,6 +579,7 @@ export default function TodayPage() {
           </div>
         }
       >
+        {/* Unified destination & time selectors */}
         <div style={{ marginBottom: 12, padding: '8px 12px', background: '#f0f5ff', borderRadius: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontWeight: 600, whiteSpace: 'nowrap', color: '#1d39c4' }}>统一导入到目的地：</span>
@@ -534,6 +612,7 @@ export default function TodayPage() {
 
         <div style={{ maxHeight: 400, overflowY: 'auto' }}>
           {(() => {
+            // Group previewData by category
             const groups: { key: string; items: any[] }[] = []
             const grouped: Record<string, any[]> = {}
             const ungrouped: any[] = []
@@ -548,6 +627,7 @@ export default function TodayPage() {
               }
             })
 
+            // Preserve order of first appearance
             const order: string[] = []
             previewData.forEach((item: any) => {
               const cat = item.category
@@ -563,21 +643,32 @@ export default function TodayPage() {
               return <Empty description="无预览数据" />
             }
 
+            // Collect unique categories for per-row dropdown
             const categoryOptions = Array.from(
               new Set(previewData.map((item: any) => item.category).filter(Boolean))
             ).map((c: any) => ({ label: c, value: c }))
 
             return groups.map((group) => (
               <div key={group.key} style={{ marginBottom: 12 }}>
+                {/* Group header */}
                 <div style={{
-                  padding: '6px 12px', background: '#f0f5ff',
-                  borderRadius: 6, fontWeight: 700, fontSize: 14,
-                  color: '#1d39c4', marginBottom: 4,
+                  padding: '6px 12px',
+                  background: '#f0f5ff',
+                  borderRadius: 6,
+                  fontWeight: 700,
+                  fontSize: 14,
+                  color: '#1d39c4',
+                  marginBottom: 4,
                 }}>
                   {group.key}
                 </div>
+                {/* Group items */}
                 {group.items.map((item: any) => (
-                  <div key={item._idx} style={{ padding: '8px 12px', borderBottom: '1px solid #f0f0f0' }}>
+                  <div key={item._idx} style={{
+                    padding: '8px 12px',
+                    borderBottom: '1px solid #f0f0f0',
+                  }}>
+                    {/* Row 1: Title + Date */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                       <div style={{ flex: 1 }}>
                         <Input
@@ -594,6 +685,7 @@ export default function TodayPage() {
                         {item.task_date || selectedDate.format('YYYY-MM-DD')}
                       </div>
                     </div>
+                    {/* Row 2: category + task_time + end_time + description */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <Select
                         size="small"
