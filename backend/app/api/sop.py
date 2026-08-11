@@ -20,7 +20,7 @@ class SopFolderCreate(BaseModel):
 
 
 @router.get('/folders', response_model=List[SopFolderOut])
-def list_folders(trip_filter: str = None, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def list_folders(trip_filter: str = None, db: Session = Depends(get_db)):
     q = db.query(SopFolder)
     if trip_filter and trip_filter != '全部':
         q = q.filter(SopFolder.trip_filter == trip_filter)
@@ -93,7 +93,7 @@ def bulk_delete_folders(body: SopBulkDelete, db: Session = Depends(get_db), _: U
     return {'deleted_folders': deleted_folders, 'deleted_documents': deleted_docs}
 
 @router.get('/documents', response_model=List[SopDocumentOut])
-def list_documents(folder_id: int = None, trip_filter: str = None, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def list_documents(folder_id: int = None, trip_filter: str = None, db: Session = Depends(get_db)):
     q = db.query(SopDocument)
     if folder_id:
         q = q.filter(SopDocument.folder_id == folder_id)
@@ -106,7 +106,7 @@ def list_documents(folder_id: int = None, trip_filter: str = None, db: Session =
     return docs
 
 @router.get('/documents/{doc_id}', response_model=SopDocumentOut)
-def get_document(doc_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+def get_document(doc_id: int, db: Session = Depends(get_db)):
     doc = db.query(SopDocument).filter(SopDocument.id == doc_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail='Not found')
