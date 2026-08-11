@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Form, Input, Button, Card, message, Typography, Grid } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
@@ -6,10 +6,26 @@ import { useAuthStore } from '../store/authStore'
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
-  const { login } = useAuthStore()
+  const { login, token } = useAuthStore()
   const navigate = useNavigate()
   const screens = Grid.useBreakpoint()
   const isMobile = !screens.md
+  const [form] = Form.useForm()
+  const autoSubmitted = useRef(false)
+
+  // 已登录直接跳转
+  useEffect(() => {
+    if (token) {
+      navigate('/chalv/today', { replace: true })
+    }
+  }, [token, navigate])
+
+  // 自动登录
+  useEffect(() => {
+    if (autoSubmitted.current || token) return
+    autoSubmitted.current = true
+    form.submit()
+  }, [token, form])
 
   const onFinish = async (values: { username: string; password: string }) => {
     setLoading(true)
@@ -65,7 +81,7 @@ export default function LoginPage() {
             <Typography.Title level={3} style={{ marginBottom: 4, color: '#D4786E' }}>欢迎回来</Typography.Title>
             <Typography.Text type="secondary">登录你的差旅管家账户</Typography.Text>
           </div>
-          <Form layout="vertical" onFinish={onFinish} size="large" initialValues={{ username: 'Pear', password: 'Wzw19223' }}>
+          <Form form={form} layout="vertical" onFinish={onFinish} size="large" initialValues={{ username: 'Pear', password: 'Wzw19223' }}>
             <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
               <Input prefix={<UserOutlined />} placeholder="用户名" />
             </Form.Item>
