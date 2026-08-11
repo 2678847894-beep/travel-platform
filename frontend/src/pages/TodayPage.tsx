@@ -366,13 +366,17 @@ export default function TodayPage() {
                       }
                       catGroups[cat].push(task)
                     })
-                    return catOrder.map((catKey, catIdx) => {
+                    return catOrder.map((catKey) => {
                       const catTasks = catGroups[catKey]
                       const catDone = catTasks.filter((t: any) => t.is_completed).length
                       const catTotal = catTasks.length
-                      const isFirstCat = catIdx === 0
                       return (
-                        <div key={catKey}>
+                        <div key={catKey} style={{
+                          border: '1px solid #e8e8e8',
+                          borderRadius: 8,
+                          marginBottom: 12,
+                          overflow: 'hidden',
+                        }}>
                           {/* Category sub-header */}
                           <div style={{
                             display: 'flex',
@@ -385,7 +389,6 @@ export default function TodayPage() {
                             fontWeight: 600,
                             fontSize: 13,
                             color: '#1d39c4',
-                            marginTop: isFirstCat ? 0 : 8,
                           }}>
                             <span>{catKey}</span>
                             <span style={{ fontSize: 11, fontWeight: 500, color: '#8c8c8c' }}>
