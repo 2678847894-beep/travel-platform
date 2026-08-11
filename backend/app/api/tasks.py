@@ -43,7 +43,6 @@ def list_tasks(
     task_date: str = None,
     trip_filter: str = None,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
 ):
     q = db.query(DailyTask)
     if task_date:
@@ -83,7 +82,6 @@ def toggle_task(
     task_id: int,
     toggle_date: str = None,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
 ):
     task = db.query(DailyTask).filter(DailyTask.id == task_id).first()
     if not task:
