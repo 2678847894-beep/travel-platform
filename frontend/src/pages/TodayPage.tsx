@@ -98,9 +98,11 @@ export default function TodayPage() {
     }
   }
 
-  const loadTasks = async () => {
+  const loadTasks = async (dateStr?: string, filterStr?: string) => {
     try {
-      const res = await getTasks(selectedDate.format('YYYY-MM-DD'), tripFilter)
+      const d = dateStr || selectedDate.format('YYYY-MM-DD')
+      const f = filterStr ?? tripFilter
+      const res = await getTasks(d, f)
       setTasks(res.data)
     } catch { setTasks([]) }
   }
@@ -198,10 +200,11 @@ export default function TodayPage() {
       setPreviewOpen(false)
       setPreviewData([])
       // Switch the active filter to the imported destination
+      const targetFilter = unifiedTripFilter || tripFilter
       if (unifiedTripFilter && unifiedTripFilter !== '全部') {
         setTripFilter(unifiedTripFilter)
       }
-      await loadTasks()
+      await loadTasks(undefined, targetFilter)
     } catch {
       message.error('导入失败')
     } finally {
