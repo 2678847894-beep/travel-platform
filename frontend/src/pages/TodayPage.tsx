@@ -101,7 +101,8 @@ export default function TodayPage() {
   const loadTasks = async (dateStr?: string, filterStr?: string) => {
     try {
       const d = dateStr || selectedDate.format('YYYY-MM-DD')
-      const f = filterStr ?? tripFilter
+      const rawFilter = filterStr ?? tripFilter
+      const f = rawFilter === '全部' ? 'all' : rawFilter
       const res = await getTasks(d, f)
       setTasks(res.data)
     } catch { setTasks([]) }
@@ -281,7 +282,7 @@ export default function TodayPage() {
         {/* Segmented Filter */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: isMobile ? 'auto' : 'visible' }}>
         <Segmented
-          options={tripFilters}
+          options={['全部', ...tripFilters]}
           value={tripFilter}
           onChange={(v) => setTripFilter(v as string)}
         />
@@ -322,31 +323,37 @@ export default function TodayPage() {
             const groupTotal = groupTasks.length
             const groupPercent = groupTotal > 0 ? Math.round((groupDone / groupTotal) * 100) : 0
             return (
-              <div key={groupKey} style={{ marginBottom: 16 }}>
-                {/* Group header — visual separator row */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '8px 14px',
-                  background: 'linear-gradient(90deg, #e6f0ff 0%, #f0f5ff 100%)',
-                  borderLeft: '4px solid #1677ff',
-                  borderRadius: '6px 6px 0 0',
-                  fontWeight: 700,
-                  fontSize: 15,
-                  color: '#1d39c4',
-                }}>
-                  <span>{groupKey}</span>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: '#5b7bb4' }}>
-                    {groupDone} / {groupTotal}
-                  </span>
-                </div>
-                {/* Group progress bar */}
+              <Card
+                key={groupKey}
+                title={
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: '#e6f7ff',
+                    borderLeft: '4px solid #1677ff',
+                    borderRadius: '4px 4px 0 0',
+                    padding: '4px 0',
+                    fontWeight: 700,
+                    fontSize: 15,
+                    color: '#1d39c4',
+                  }}>
+                    <span>{groupKey}</span>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: '#5b7bb4' }}>
+                      {groupDone} / {groupTotal}
+                    </span>
+                  </div>
+                }
+                style={{ marginBottom: 16 }}
+                styles={{
+                  header: { background: 'transparent', borderBottom: 'none', padding: '8px 14px 4px' },
+                  body: { padding: 0 },
+                }}
+              >
                 <div style={{ padding: '6px 14px 0', background: '#fafcff' }}>
                   <Progress percent={groupPercent} showInfo={false} size="small" strokeColor="#1677ff" trailColor="#e6f0ff" />
                 </div>
-                {/* Group items — indented with left color bar */}
-                <div style={{ background: '#fff', border: '1px solid #f0f0f0', borderTop: 'none', borderRadius: '0 0 6px 6px' }}>
+                <div style={{ background: '#fff', borderTop: '1px solid #f0f0f0' }}>
                   {groupTasks.map((task: any) => {
                     const isCompleted = task.is_completed
                     const isOverdue = task.is_overdue
@@ -405,7 +412,7 @@ export default function TodayPage() {
                     )
                   })}
                 </div>
-              </div>
+              </Card>
             )
           })
         })()
