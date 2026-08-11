@@ -229,7 +229,7 @@ export default function TodayPage() {
   const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', background: '#f2f2f7', minHeight: '100vh', padding: 16 }}>
+    <div style={{ maxWidth: 900, margin: '0 auto', background: '#fff', minHeight: '100vh', padding: 16 }}>
       <style>{`
         .task-row { cursor: pointer; transition: background 0.15s; }
         .task-row:hover { background: #f5f9ff !important; }
@@ -345,7 +345,7 @@ export default function TodayPage() {
                 borderRadius: 8,
                 marginBottom: 12,
                 overflow: 'hidden',
-                background: 'transparent',
+                background: '#fff',
               }}>
                 {/* Category sub-header */}
                 <div onClick={() => toggleCategoryCollapse(catKey)}
