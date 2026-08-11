@@ -189,8 +189,8 @@ export default function TodayPage() {
         task_date: dateStr,
         end_date: dayjs(dateStr).add(1, 'year').format('YYYY-MM-DD'),
         trip_filter: unifiedTripFilter,
-        task_time: item.task_time || (unifiedStartTime ? unifiedStartTime.format('YYYY-MM-DD HH:mm') : ''),
-        end_time: item.end_time || (unifiedEndTime ? unifiedEndTime.format('YYYY-MM-DD HH:mm') : ''),
+        task_time: item.task_time || (unifiedStartTime ? unifiedStartTime.format('HH:mm') : ''),
+        end_time: item.end_time || (unifiedEndTime ? unifiedEndTime.format('HH:mm') : ''),
       }))
       const res = await aiImportTasksConfirm({ tasks: ts })
       const importedCount = res.data?.count || ts.length
