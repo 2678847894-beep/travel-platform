@@ -237,8 +237,8 @@ export default function TodayPage() {
         .delete-btn .ant-btn-icon { font-size: 18px; }
         .delete-btn:hover { color: #ff4d4f !important; background: #fff1f0 !important; }
       `}</style>
-      {/* Top Card */}
-      <Card style={{ marginBottom: 16 }}>
+      {/* Top Section */}
+      <div style={{ background: '#fff', borderRadius: 8, padding: 20, marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>每日任务</h2>
@@ -314,13 +314,13 @@ export default function TodayPage() {
           />
         )}
         </div>
-      </Card>
+      </div>
 
       {/* Task List — grouped by category */}
       {tasks.length === 0 ? (
-        <Card>
+        <div style={{ background: '#fff', borderRadius: 8, padding: 20 }}>
           <Empty description={isAdmin ? '暂无任务，点击上方按钮添加' : '当天暂无任务'} />
-        </Card>
+        </div>
       ) : (
         (() => {
           // Group all tasks by category, preserving first-appearance order
