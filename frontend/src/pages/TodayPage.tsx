@@ -316,172 +316,127 @@ export default function TodayPage() {
         </div>
       </Card>
 
-      {/* Task List — grouped by trip_filter */}
+      {/* Task List — grouped by category */}
       {tasks.length === 0 ? (
         <Card>
           <Empty description={isAdmin ? '暂无任务，点击上方按钮添加' : '当天暂无任务'} />
         </Card>
       ) : (
         (() => {
-          // Group tasks by trip_filter, preserving first-appearance order
-          const grouped: Record<string, any[]> = {}
-          const order: string[] = []
+          // Group all tasks by category, preserving first-appearance order
+          const catGroups: Record<string, any[]> = {}
+          const catOrder: string[] = []
           tasks.forEach((task: any) => {
-            const gf = task.trip_filter || '未分组'
-            if (!grouped[gf]) {
-              grouped[gf] = []
-              order.push(gf)
+            const cat = (task.category && task.category.trim()) || '其他'
+            if (!catGroups[cat]) {
+              catGroups[cat] = []
+              catOrder.push(cat)
             }
-            grouped[gf].push(task)
+            catGroups[cat].push(task)
           })
 
-          return order.map((groupKey) => {
-            const groupTasks = grouped[groupKey]
+          return catOrder.map((catKey) => {
+            const catTasks = catGroups[catKey]
+            const catDone = catTasks.filter((t: any) => t.is_completed).length
+            const catTotal = catTasks.length
             return (
-              <Card
-                key={groupKey}
-                title={
-                  <div style={{
+              <div key={catKey} style={{
+                border: '1px solid #d9d9d9',
+                borderRadius: 8,
+                marginBottom: 12,
+                overflow: 'hidden',
+                background: 'transparent',
+              }}>
+                {/* Category sub-header */}
+                <div onClick={() => toggleCategoryCollapse(catKey)}
+                  style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    background: '#e6f7ff',
-                    borderLeft: '4px solid #1677ff',
-                    borderRadius: '4px 4px 0 0',
-                    padding: '4px 0',
+                    padding: '8px 12px 8px 14px',
+                    background: 'transparent',
+                    borderLeft: '3px solid #1677ff',
+                    borderBottom: '1px solid #f0f0f0',
                     fontWeight: 700,
-                    fontSize: 15,
-                    color: '#1d39c4',
+                    fontSize: 14,
+                    color: '#262626',
+                    cursor: 'pointer',
+                    userSelect: 'none',
                   }}>
-                    <span>{groupKey}</span>
-                  </div>
-                }
-                style={{ marginBottom: 16, background: 'transparent', boxShadow: 'none' }}
-                styles={{
-                  header: { background: 'transparent', borderBottom: 'none', padding: '8px 14px 4px' },
-                  body: { padding: 0 },
-                }}
-              >
-                <div style={{ borderTop: '1px solid #f0f0f0' }}>
-                  {(() => {
-                    // Sub-group by category within this trip_filter group
-                    const catGroups: Record<string, any[]> = {}
-                    const catOrder: string[] = []
-                    groupTasks.forEach((task: any) => {
-                      const cat = (task.category && task.category.trim()) || '其他'
-                      if (!catGroups[cat]) {
-                        catGroups[cat] = []
-                        catOrder.push(cat)
-                      }
-                      catGroups[cat].push(task)
-                    })
-                    return catOrder.map((catKey) => {
-                      const catTasks = catGroups[catKey]
-                      const catDone = catTasks.filter((t: any) => t.is_completed).length
-                      const catTotal = catTasks.length
-                      return (
-                        <div key={catKey} style={{
-                          border: '1px solid #d9d9d9',
-                          borderRadius: 8,
-                          marginBottom: 12,
-                          overflow: 'hidden',
-                          background: 'transparent',
-                        }}>
-                          {/* Category sub-header */}
-                          <div onClick={() => toggleCategoryCollapse(`${groupKey}-${catKey}`)}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '8px 12px 8px 14px',
-                              background: 'transparent',
-                              borderLeft: '3px solid #1677ff',
-                              borderBottom: '1px solid #f0f0f0',
-                              fontWeight: 700,
-                              fontSize: 14,
-                              color: '#262626',
-                              cursor: 'pointer',
-                              userSelect: 'none',
-                            }}>
-                            <span>{catKey}</span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontSize: 11, fontWeight: 600, color: '#8c8c8c' }}>
-                                {catDone}/{catTotal}
-                              </span>
-                              {collapsedCategories.has(`${groupKey}-${catKey}`)
-                                ? <DownOutlined style={{ fontSize: 10, color: '#bfbfbf' }} />
-                                : <UpOutlined style={{ fontSize: 10, color: '#bfbfbf' }} />}
-                            </span>
-                          </div>
-                          {/* Category tasks — compact without per-task left border */}
-                          {!collapsedCategories.has(`${groupKey}-${catKey}`) && catTasks.map((task: any) => {
-                            const isCompleted = task.is_completed
-                            const isOverdue = task.is_overdue
-                            return (
-                              <div
-                                key={task.id}
-                                onClick={() => handleToggle(task.id)}
-                                className={`task-row${isOverdue && !isCompleted ? ' task-overdue' : ''}`}
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'flex-start',
-                                  gap: 12,
-                                  padding: '10px 16px 10px 18px',
-                                  borderBottom: '1px solid #f0f0f0',
-                                  opacity: isCompleted && !isOverdue ? 0.55 : 1,
-                                  ...(isOverdue && !isCompleted ? {
-                                    background: '#fff2f0',
-                                  } : {}),
-                                }}
-                              >
-                                <Checkbox
-                                  checked={isCompleted}
-                                  onClick={(e) => e.stopPropagation()}
-                                  onChange={() => handleToggle(task.id)}
-                                  style={{ marginTop: 4 }}
-                                />
-                                <div style={{ flex: 1 }}>
-                                  <div style={{
-                                    fontWeight: 600,
-                                    fontSize: 15,
-                                    textDecoration: isCompleted ? 'line-through' : 'none',
-                                    color: isOverdue && !isCompleted ? '#ff4d4f' : 'inherit',
-                                  }}>
-                                    {task.title}
-                                  </div>
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
-                                    {task.task_time && (
-                                      <Tag>{task.task_time}{task.end_time ? ` - ${task.end_time}` : ''}</Tag>
-                                    )}
-                                    {task.end_date && (
-                                      <Tag style={{ background: '#f0e6ff', color: '#722ed1', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                                        <CalendarOutlined style={{ fontSize: 11 }} />至 {dayjs(task.end_date).format('MM/DD')}
-                                      </Tag>
-                                    )}
-                                    {task.location && <Tag color="orange">{task.location}</Tag>}
-                                    {isOverdue && !isCompleted && (
-                                      <Tag color="red">已过期</Tag>
-                                    )}
-                                  </div>
-                                  {task.description && (
-                                    <div style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>{task.description}</div>
-                                  )}
-                                </div>
-                                {isAdmin && (
-                                  <Button type="text" danger className="delete-btn"
-                                    style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                                    icon={<DeleteOutlined />}
-                                    onClick={(e) => { e.stopPropagation(); handleDelete(task.id) }} />
-                                )}
-                              </div>
-                            )
-                          })}
-                        </div>
-                      )
-                    })
-                  })()}
+                  <span>{catKey}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#8c8c8c' }}>
+                      {catDone}/{catTotal}
+                    </span>
+                    {collapsedCategories.has(catKey)
+                      ? <DownOutlined style={{ fontSize: 10, color: '#bfbfbf' }} />
+                      : <UpOutlined style={{ fontSize: 10, color: '#bfbfbf' }} />}
+                  </span>
                 </div>
-              </Card>
+                {/* Category tasks — compact without per-task left border */}
+                {!collapsedCategories.has(catKey) && catTasks.map((task: any) => {
+                  const isCompleted = task.is_completed
+                  const isOverdue = task.is_overdue
+                  return (
+                    <div
+                      key={task.id}
+                      onClick={() => handleToggle(task.id)}
+                      className={`task-row${isOverdue && !isCompleted ? ' task-overdue' : ''}`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 12,
+                        padding: '10px 16px 10px 18px',
+                        borderBottom: '1px solid #f0f0f0',
+                        opacity: isCompleted && !isOverdue ? 0.55 : 1,
+                        ...(isOverdue && !isCompleted ? {
+                          background: '#fff2f0',
+                        } : {}),
+                      }}
+                    >
+                      <Checkbox
+                        checked={isCompleted}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={() => handleToggle(task.id)}
+                        style={{ marginTop: 4 }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{
+                          fontWeight: 600,
+                          fontSize: 15,
+                          textDecoration: isCompleted ? 'line-through' : 'none',
+                          color: isOverdue && !isCompleted ? '#ff4d4f' : 'inherit',
+                        }}>
+                          {task.title}
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
+                          {task.task_time && (
+                            <Tag>{task.task_time}{task.end_time ? ` - ${task.end_time}` : ''}</Tag>
+                          )}
+                          {task.end_date && (
+                            <Tag style={{ background: '#f0e6ff', color: '#722ed1', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              <CalendarOutlined style={{ fontSize: 11 }} />至 {dayjs(task.end_date).format('MM/DD')}
+                            </Tag>
+                          )}
+                          {task.location && <Tag color="orange">{task.location}</Tag>}
+                          {isOverdue && !isCompleted && (
+                            <Tag color="red">已过期</Tag>
+                          )}
+                        </div>
+                        {task.description && (
+                          <div style={{ fontSize: 13, color: '#64748b', marginTop: 6 }}>{task.description}</div>
+                        )}
+                      </div>
+                      {isAdmin && (
+                        <Button type="text" danger className="delete-btn"
+                          style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                          icon={<DeleteOutlined />}
+                          onClick={(e) => { e.stopPropagation(); handleDelete(task.id) }} />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             )
           })
         })()
