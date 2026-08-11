@@ -353,7 +353,7 @@ export default function TodayPage() {
                 <div style={{ padding: '6px 14px 0', background: '#fafcff' }}>
                   <Progress percent={groupPercent} showInfo={false} size="small" strokeColor="#1677ff" trailColor="#e6f0ff" />
                 </div>
-                <div style={{ background: '#fff', borderTop: '1px solid #f0f0f0' }}>
+                <div style={{ borderTop: '1px solid #f0f0f0' }}>
                   {(() => {
                     // Sub-group by category within this trip_filter group
                     const catGroups: Record<string, any[]> = {}
@@ -407,7 +407,7 @@ export default function TodayPage() {
                                   alignItems: 'flex-start',
                                   gap: 12,
                                   padding: '8px 16px 8px 18px',
-                                  borderBottom: '1px solid #f5f5f5',
+                                  borderBottom: '1px solid #f0f0f0',
                                   opacity: isCompleted && !isOverdue ? 0.55 : 1,
                                   ...(isOverdue && !isCompleted ? {
                                     background: '#fff2f0',
