@@ -350,7 +350,7 @@ export default function TodayPage() {
                   body: { padding: 0 },
                 }}
               >
-                <div style={{ padding: '6px 14px 0', background: '#fafcff' }}>
+                <div style={{ padding: '6px 14px 0' }}>
                   <Progress percent={groupPercent} showInfo={false} size="small" strokeColor="#1677ff" trailColor="#e6f0ff" />
                 </div>
                 <div style={{ borderTop: '1px solid #f0f0f0' }}>
@@ -383,7 +383,7 @@ export default function TodayPage() {
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             padding: '6px 16px 6px 14px',
-                            background: '#fafafa',
+                            background: 'transparent',
                             borderLeft: '3px solid #1677ff',
                             borderBottom: '1px solid #f0f0f0',
                             fontWeight: 600,
