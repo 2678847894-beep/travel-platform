@@ -42,6 +42,16 @@ export default function TodayPage() {
   const [unifiedTripFilter, setUnifiedTripFilter] = useState('全部')
   const [unifiedStartTime, setUnifiedStartTime] = useState<Dayjs | null>(null)
   const [unifiedEndTime, setUnifiedEndTime] = useState<Dayjs | null>(null)
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
+
+  const toggleCategoryCollapse = (catKey: string) => {
+    setCollapsedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(catKey)) next.delete(catKey)
+      else next.add(catKey)
+      return next
+    })
+  }
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -219,6 +229,13 @@ export default function TodayPage() {
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      <style>{`
+        .task-row { cursor: pointer; transition: background 0.15s; }
+        .task-row:hover { background: #f5f9ff !important; }
+        .task-row.task-overdue:hover { background: #fff2e0 !important; }
+        .delete-btn .ant-btn-icon { font-size: 18px; }
+        .delete-btn:hover { color: #ff4d4f !important; background: #fff1f0 !important; }
+      `}</style>
       {/* Top Card */}
       <Card style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
@@ -271,11 +288,11 @@ export default function TodayPage() {
         {/* Progress Bar */}
         {totalCount > 0 && (
           <div style={{ marginBottom: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13, color: '#64748b' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 14, fontWeight: 600, color: '#262626' }}>
               <span>完成进度</span>
-              <span>{completedCount} / {totalCount} ({percent}%)</span>
+              <span>{completedCount} / {totalCount} （{percent}%）</span>
             </div>
-            <Progress percent={percent} showInfo={false} strokeColor="#1677ff" trailColor="#f0f0f0" />
+            <Progress percent={percent} showInfo={false} strokeWidth={8} strokeColor="#1677ff" trailColor="#f0f0f0" />
           </div>
         )}
 
@@ -350,8 +367,8 @@ export default function TodayPage() {
                   body: { padding: 0 },
                 }}
               >
-                <div style={{ padding: '6px 14px 0' }}>
-                  <Progress percent={groupPercent} showInfo={false} size="small" strokeColor="#1677ff" trailColor="#e6f0ff" />
+                <div style={{ padding: '8px 14px 0' }}>
+                  <Progress percent={groupPercent} showInfo={false} strokeWidth={6} strokeColor="#1677ff" trailColor="#e6f0ff" />
                 </div>
                 <div style={{ borderTop: '1px solid #f0f0f0' }}>
                   {(() => {
@@ -378,35 +395,45 @@ export default function TodayPage() {
                           overflow: 'hidden',
                         }}>
                           {/* Category sub-header */}
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            padding: '6px 16px 6px 14px',
-                            background: 'transparent',
-                            borderLeft: '3px solid #1677ff',
-                            borderBottom: '1px solid #f0f0f0',
-                            fontWeight: 600,
-                            fontSize: 13,
-                            color: '#1d39c4',
-                          }}>
+                          <div onClick={() => toggleCategoryCollapse(`${groupKey}-${catKey}`)}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '8px 12px 8px 14px',
+                              background: 'transparent',
+                              borderLeft: '3px solid #1677ff',
+                              borderBottom: '1px solid #f0f0f0',
+                              fontWeight: 700,
+                              fontSize: 14,
+                              color: '#262626',
+                              cursor: 'pointer',
+                              userSelect: 'none',
+                            }}>
                             <span>{catKey}</span>
-                            <span style={{ fontSize: 11, fontWeight: 500, color: '#8c8c8c' }}>
-                              {catDone}/{catTotal}
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: '#8c8c8c' }}>
+                                {catDone}/{catTotal}
+                              </span>
+                              {collapsedCategories.has(`${groupKey}-${catKey}`)
+                                ? <DownOutlined style={{ fontSize: 10, color: '#bfbfbf' }} />
+                                : <UpOutlined style={{ fontSize: 10, color: '#bfbfbf' }} />}
                             </span>
                           </div>
                           {/* Category tasks — compact without per-task left border */}
-                          {catTasks.map((task: any) => {
+                          {!collapsedCategories.has(`${groupKey}-${catKey}`) && catTasks.map((task: any) => {
                             const isCompleted = task.is_completed
                             const isOverdue = task.is_overdue
                             return (
                               <div
                                 key={task.id}
+                                onClick={() => handleToggle(task.id)}
+                                className={`task-row${isOverdue && !isCompleted ? ' task-overdue' : ''}`}
                                 style={{
                                   display: 'flex',
                                   alignItems: 'flex-start',
                                   gap: 12,
-                                  padding: '8px 16px 8px 18px',
+                                  padding: '10px 16px 10px 18px',
                                   borderBottom: '1px solid #f0f0f0',
                                   opacity: isCompleted && !isOverdue ? 0.55 : 1,
                                   ...(isOverdue && !isCompleted ? {
@@ -416,6 +443,7 @@ export default function TodayPage() {
                               >
                                 <Checkbox
                                   checked={isCompleted}
+                                  onClick={(e) => e.stopPropagation()}
                                   onChange={() => handleToggle(task.id)}
                                   style={{ marginTop: 4 }}
                                 />
@@ -433,7 +461,9 @@ export default function TodayPage() {
                                       <Tag>{task.task_time}{task.end_time ? ` - ${task.end_time}` : ''}</Tag>
                                     )}
                                     {task.end_date && (
-                                      <Tag color="purple">至 {dayjs(task.end_date).format('MM/DD')}</Tag>
+                                      <Tag style={{ background: '#f0e6ff', color: '#722ed1', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                        <CalendarOutlined style={{ fontSize: 11 }} />至 {dayjs(task.end_date).format('MM/DD')}
+                                      </Tag>
                                     )}
                                     {task.location && <Tag color="orange">{task.location}</Tag>}
                                     {isOverdue && !isCompleted && (
@@ -445,8 +475,10 @@ export default function TodayPage() {
                                   )}
                                 </div>
                                 {isAdmin && (
-                                  <Button type="text" danger size="small" icon={<DeleteOutlined />}
-                                    onClick={() => handleDelete(task.id)} />
+                                  <Button type="text" danger className="delete-btn"
+                                    style={{ width: 28, height: 28, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                                    icon={<DeleteOutlined />}
+                                    onClick={(e) => { e.stopPropagation(); handleDelete(task.id) }} />
                                 )}
                               </div>
                             )
