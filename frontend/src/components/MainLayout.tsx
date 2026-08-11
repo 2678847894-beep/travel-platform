@@ -295,7 +295,7 @@ export default function MainLayout() {
         </Header>
 
         {/* 内容区 */}
-        <Content className="content-area" style={{ padding: isMobile ? 12 : 24, minHeight: 'calc(100vh - 56px)' }}>
+        <Content className="content-area" style={{ padding: isMobile ? 12 : 24, minHeight: 'calc(100vh - 56px)', background: '#f2f2f7' }}>
           <Outlet />
         </Content>
       </Layout>
