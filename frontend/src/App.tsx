@@ -7,7 +7,6 @@ import LoginPage from './pages/LoginPage'
 // 公共页面
 import PublicSopPage from './pages/PublicSopPage'
 import PublicSopDetailPage from './pages/PublicSopDetailPage'
-import PublicTasksPage from './pages/PublicTasksPage'
 import PublicChecklistPage from './pages/PublicChecklistPage'
 import PublicDocumentLibrary from './pages/PublicDocumentLibrary'
 
@@ -36,7 +35,7 @@ export default function App() {
         <Route index element={<PublicSopPage />} />
         <Route path="sop" element={<PublicSopPage />} />
         <Route path="sop/:id" element={<PublicSopDetailPage />} />
-        <Route path="tasks" element={<PublicTasksPage />} />
+        <Route path="tasks" element={<Navigate to="/chalv/tasks" replace />} />
         <Route path="checklist" element={<PublicChecklistPage />} />
         <Route path="documents" element={<PublicDocumentLibrary />} />
       </Route>
