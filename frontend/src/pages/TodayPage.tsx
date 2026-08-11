@@ -229,7 +229,7 @@ export default function TodayPage() {
   const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', background: '#f5f5f5', minHeight: '100vh', padding: 16 }}>
+    <div style={{ maxWidth: 900, margin: '0 auto', background: '#f2f2f7', minHeight: '100vh', padding: 16 }}>
       <style>{`
         .task-row { cursor: pointer; transition: background 0.15s; }
         .task-row:hover { background: #f5f9ff !important; }
@@ -337,9 +337,6 @@ export default function TodayPage() {
 
           return order.map((groupKey) => {
             const groupTasks = grouped[groupKey]
-            const groupDone = groupTasks.filter((t) => t.is_completed).length
-            const groupTotal = groupTasks.length
-            const groupPercent = groupTotal > 0 ? Math.round((groupDone / groupTotal) * 100) : 0
             return (
               <Card
                 key={groupKey}
@@ -357,9 +354,6 @@ export default function TodayPage() {
                     color: '#1d39c4',
                   }}>
                     <span>{groupKey}</span>
-                    <span style={{ fontSize: 12, fontWeight: 500, color: '#5b7bb4' }}>
-                      {groupDone} / {groupTotal}
-                    </span>
                   </div>
                 }
                 style={{ marginBottom: 16, background: 'transparent', boxShadow: 'none' }}
@@ -368,9 +362,6 @@ export default function TodayPage() {
                   body: { padding: 0 },
                 }}
               >
-                <div style={{ padding: '8px 14px 0' }}>
-                  <Progress percent={groupPercent} showInfo={false} strokeWidth={6} strokeColor="#1677ff" trailColor="#e6f0ff" />
-                </div>
                 <div style={{ borderTop: '1px solid #f0f0f0' }}>
                   {(() => {
                     // Sub-group by category within this trip_filter group
